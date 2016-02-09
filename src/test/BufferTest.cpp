@@ -19,6 +19,21 @@ int main() {
 
   auto buffer0 = bufferFactory.createBuffer<char, 1>({2});
   buffer0.fromInitializerList({'1', '2'});
-  logger->log(buffer0[0]());
+  logger->log(buffer0[0].get());
+
+  auto bufferm1 = bufferFactory.createBuffer<int, 2>({1, 1});
+  bufferm1.fromInitializerList({{1}});
+  logger->log(bufferm1[0][0].get());
+
+  auto bufferm2 = bufferFactory.createBuffer<int, 2>({2, 3});
+  bufferm2.fromInitializerList({{1, 2, 3}, {4, 5, 6}});
+  logger->log(bufferm2[0][0].get());
+  logger->log(bufferm2[0][1].get());
+  logger->log(bufferm2[0][2].get());
+  logger->log(bufferm2[1][0].get());
+  logger->log(bufferm2[1][1].get());
+  logger->log(bufferm2[1][2].get());
+  (bufferm2[0][0]).set(7);
+  logger->log(bufferm2[0][0].get());
   return 0;
 }

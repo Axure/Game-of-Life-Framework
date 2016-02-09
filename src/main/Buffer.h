@@ -51,15 +51,20 @@ class Buffer {
     selfOwnend = true;
   }
 
-  Buffer(const Buffer<T, dimension + 1> &parentBuffer, std::size_t index) {
+  Buffer(Buffer<T, dimension + 1> &parentBuffer, std::size_t index) {
     /**
      * Reassign the size.
      */
-
+    auto sizeIterator = sizes_.begin();
+    sizeIterator++;
+    std::copy(
+        begin(parentBuffer.getSizes()) + 1,
+        end(parentBuffer.getSizes()),
+        begin(sizes_));
     /**
      * Set the pointer.
      */
-
+    memory_ = parentBuffer.getMemory() + index * getTotalSize();
     /**
      * Mark as not self-owned;
      */
@@ -110,6 +115,10 @@ class Buffer {
     return memory_;
   }
 
+  std::array<std::size_t, dimension> &getSizes() {
+    return sizes_;
+  };
+
  private:
   std::array<std::size_t, dimension> sizes_;
   T *memory_;
@@ -141,6 +150,14 @@ class Buffer<T, 0> {
 
   T operator()() {
     return *value;
+  }
+
+  T get() {
+    return *value;
+  }
+
+  void set(const T &value_) {
+    *value = value_;
   }
 
   ~Buffer() {

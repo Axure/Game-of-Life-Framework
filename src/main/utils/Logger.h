@@ -6,6 +6,7 @@
 #define GAMEOFLIF_LOGGER_H
 #include <string>
 #include <iostream>
+#include <map>
 
 struct LogLevel {
   enum class VALUES {
@@ -63,6 +64,7 @@ class Logger {
   void flushAbove(LogLevel infimum);
   void flushBelow(LogLevel supremum);
   static int count;
+  static std::map<int, Logger&> loggers;
   int id;
 };
 

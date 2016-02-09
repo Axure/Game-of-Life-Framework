@@ -6,7 +6,7 @@
 #include "Logger.h"
 
 int Logger::count = 0;
-
+std::map<int, Logger&> Logger::loggers = {};
 //void Logger::log(std::string message, LogLevel level) {
 //  std::cout << "[Logger id: " << id
 //      << ", " << level.toString() << "]: "
@@ -31,9 +31,16 @@ void Logger::flushBelow(LogLevel supremum) {
 
 Logger::Logger() {
   id = Logger::count;
+  while(Logger::loggers.find(id) != Logger::loggers.end()) {
+    id += 1;
+  }
+  std::cout << id<< std::endl;
+  Logger::loggers.insert(
+      std::pair<int, Logger&>(id, *this));
+//  Logger::loggers[id] = *this;
   Logger::count += 1;
 }
 
 Logger::~Logger() {
-
+  Logger::loggers.erase(id);
 }
