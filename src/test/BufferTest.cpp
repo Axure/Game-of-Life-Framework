@@ -16,5 +16,9 @@ int main() {
   auto loggerFactory = LoggerFactory();
   auto logger = loggerFactory.getSingletonLogger();
   logger->log("Hi!");
+
+  auto buffer0 = bufferFactory.createBuffer<char, 1>({2});
+  buffer0.fromInitializerList({'1', '2'});
+  logger->log(buffer0[0]());
   return 0;
 }

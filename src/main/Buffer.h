@@ -30,18 +30,28 @@ class Buffer {
  public:
   Buffer() = delete;
 
-  Buffer(typename MultiInitializerList<T, dimension>::type multiList) {
+  Buffer(const typename MultiInitializerList<T, dimension>::type &multiList) {
+    auto iterator = multiList.begin();
     for (std::size_t i = 0; i < sizes_[0]; ++i) {
-      this->operator[](i).fromInitializerList(multiList[i]);
+      if (iterator != multiList.end()) {
+        this->operator[](i).fromInitializerList(*iterator);
+        iterator++;
+      } else {
+
+      }
+
     }
+    selfOwnend = true;
   }
 
   Buffer(std::array<std::size_t, dimension> &&sizes) {
 //    static_assert(sizeof...(Types) == dimension, "Buffer initialized with in compatible number of sizes!");
     sizes_ = std::forward<std::array<std::size_t, dimension>>(sizes);
+    memory_ = new T[getTotalSize()];
+    selfOwnend = true;
   }
 
-  Buffer(Buffer<T, dimension + 1> parentBuffer, std::size_t index) {
+  Buffer(const Buffer<T, dimension + 1> &parentBuffer, std::size_t index) {
     /**
      * Reassign the size.
      */
@@ -49,7 +59,18 @@ class Buffer {
     /**
      * Set the pointer.
      */
+
+    /**
+     * Mark as not self-owned;
+     */
+    selfOwnend = false;
   }
+
+  ~Buffer() {
+    if (selfOwnend) {
+//      delete memory_;
+    }
+  };
 
   Buffer<T, dimension - 1> operator[](std::size_t index) {
     /**
@@ -59,7 +80,7 @@ class Buffer {
     /**
      * Set the pointer.
      */
-
+    return std::forward<Buffer<T, dimension - 1>>(Buffer<T, dimension - 1>(*this, index));
   }
 
   void initMemory() {
@@ -72,40 +93,68 @@ class Buffer {
     });
   }
 
+  void fromInitializerList(const typename MultiInitializerList<T, dimension>::type &multiList) {
+    auto iterator = multiList.begin();
+    for (std::size_t i = 0; i < sizes_[0]; ++i) {
+      if (iterator != multiList.end()) {
+        this->operator[](i).fromInitializerList(*iterator);
+        iterator++;
+      } else {
+
+      }
+
+    }
+  }
+
+  T *getMemory() const {
+    return memory_;
+  }
+
  private:
   std::array<std::size_t, dimension> sizes_;
   T *memory_;
+  bool selfOwnend;
 
   void reScale() {
 
   }
 
-  void fromInitializerList(typename MultiInitializerList<T, dimension>::type multiList) {
-
-  }
 };
 
 template<class T>
 class Buffer<T, 0> {
  public:
-  Buffer() {
+  Buffer() : T() {
 
   }
 
-  T operator[](std::size_t index) {
-
+  Buffer(const Buffer<T, 1> &parent, int index) {
+    value = parent.getMemory() + index;
+    selfOwned = false;
   }
 
-  void fromInitializerList(typename MultiInitializerList<T, 0>::type multiList) {
-    value = multiList;
+  T operator[](std::size_t index) = delete;
+
+  void fromInitializerList(const typename MultiInitializerList<T, 0>::type &multiList) {
+    *value = multiList;
+  }
+
+  T operator()() {
+    return *value;
+  }
+
+  ~Buffer() {
+    if (selfOwned) {
+      delete value;
+    }
   }
 
  private:
-  T value;
+  T *value;
+  bool selfOwned;
 };
 
 class BufferFactory {
- private:
 
  public:
   template<class T, std::size_t dimension>
@@ -118,10 +167,11 @@ class BufferFactory {
     return Buffer<T, dimension>(std::array<std::size_t, dimension>({sizeList}));
   }
 
-  template<class T, std::size_t dimension>
-  Buffer<T, dimension> createBuffer(typename MultiInitializerList<T, dimension>::type multiList) {
-
-  };
+//  template<class T, std::size_t dimension>
+//  Buffer<T, dimension> createBuffer(typename MultiInitializerList<T, dimension>::type multiList) {
+//
+//  };
+ private:
 
 };
 

@@ -5,6 +5,7 @@
 #ifndef GAMEOFLIF_LOGGER_H
 #define GAMEOFLIF_LOGGER_H
 #include <string>
+#include <iostream>
 
 struct LogLevel {
   enum class VALUES {
@@ -46,14 +47,22 @@ class Logger {
  public:
   Logger();
   virtual ~Logger();
-  void log(std::string message, LogLevel level = LogLevel::VALUES::INFO);
+//  void log(std::string message, LogLevel level = LogLevel::VALUES::INFO);
   void bufferedLog(std::string message, LogLevel level = LogLevel::VALUES::INFO);
+
+  template<class T>
+  void log(T message, LogLevel level = LogLevel::VALUES::INFO) {
+    std::cout << "[Logger id: " << id
+        << ", " << level.toString() << "]: "
+        << message << std::endl;
+  }
+
  private:
   LogLevel outputInfimum, outputSupremum;
   void flushInRange(LogLevel infimum, LogLevel supremum);
   void flushAbove(LogLevel infimum);
   void flushBelow(LogLevel supremum);
-  static int count ;
+  static int count;
   int id;
 };
 

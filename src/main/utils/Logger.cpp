@@ -7,11 +7,11 @@
 
 int Logger::count = 0;
 
-void Logger::log(std::string message, LogLevel level) {
-  std::cout << "[Logger id: " << id
-      << ", " << level.toString() << "]: "
-      << message << std::endl;
-}
+//void Logger::log(std::string message, LogLevel level) {
+//  std::cout << "[Logger id: " << id
+//      << ", " << level.toString() << "]: "
+//      << message << std::endl;
+//}
 
 void Logger::bufferedLog(std::string message, LogLevel level) {
 
