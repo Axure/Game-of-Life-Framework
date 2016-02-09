@@ -35,5 +35,15 @@ int main() {
   logger->log(bufferm2[1][2].get());
   (bufferm2[0][0]).set(7);
   logger->log(bufferm2[0][0].get());
+
+  auto bufferm3 = bufferFactory.createBuffer<int, 2>({2, 3});
+  bufferm3.fromInitializerList({{1, 2 }});
+  logger->log(bufferm3[0][0].get());
+  logger->log(bufferm3[0][1].get());
+  logger->log(bufferm3[0][2].get());
+  logger->log(bufferm3[1][0].get());
+  logger->log(bufferm3[1][1].get());
+  logger->log(bufferm3[1][2].get());
+
   return 0;
 }

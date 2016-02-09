@@ -105,9 +105,15 @@ class Buffer {
         this->operator[](i).fromInitializerList(*iterator);
         iterator++;
       } else {
-
+        this->operator[](i).fromDefaultConstructor();
       }
 
+    }
+  }
+
+  void fromDefaultConstructor() {
+    for (std::size_t i = 0; i < sizes_[0]; ++i) {
+      this->operator[](i).fromDefaultConstructor();
     }
   }
 
@@ -146,6 +152,10 @@ class Buffer<T, 0> {
 
   void fromInitializerList(const typename MultiInitializerList<T, 0>::type &multiList) {
     *value = multiList;
+  }
+
+  void fromDefaultConstructor() {
+    new (value) T;
   }
 
   T operator()() {
