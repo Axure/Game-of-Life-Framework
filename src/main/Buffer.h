@@ -13,26 +13,52 @@
 using std::begin;
 using std::end;
 
-constexpr std::size_t operator
-""
+//constexpr std::size_t operator "" _sz(unsigned long long n) { return n; }
 
-_sz(unsigned long long n) { return n; }
+template<class T, std::size_t dimension>
+struct MultiInitializerList {
+  using type = std::initializer_list<typename MultiInitializerList<T, dimension - 1>::type>;
+};
+
+template<class T>
+struct MultiInitializerList<T, 0> {
+  using type = T;
+};
 
 template<class T, std::size_t dimension>
 class Buffer {
  public:
   Buffer() = delete;
 
+  Buffer(typename MultiInitializerList<T, dimension>::type multiList) {
+    for (std::size_t i = 0; i < sizes_[0]; ++i) {
+      this->operator[](i).fromInitializerList(multiList[i]);
+    }
+  }
+
   Buffer(std::array<std::size_t, dimension> &&sizes) {
 //    static_assert(sizeof...(Types) == dimension, "Buffer initialized with in compatible number of sizes!");
     sizes_ = std::forward<std::array<std::size_t, dimension>>(sizes);
   }
 
-  Buffer(Buffer<T, dimension + 1> parentBuffer) {
+  Buffer(Buffer<T, dimension + 1> parentBuffer, std::size_t index) {
+    /**
+     * Reassign the size.
+     */
 
+    /**
+     * Set the pointer.
+     */
   }
 
   Buffer<T, dimension - 1> operator[](std::size_t index) {
+    /**
+     * Reassign the size.
+     */
+
+    /**
+     * Set the pointer.
+     */
 
   }
 
@@ -53,6 +79,10 @@ class Buffer {
   void reScale() {
 
   }
+
+  void fromInitializerList(typename MultiInitializerList<T, dimension>::type multiList) {
+
+  }
 };
 
 template<class T>
@@ -66,6 +96,12 @@ class Buffer<T, 0> {
 
   }
 
+  void fromInitializerList(typename MultiInitializerList<T, 0>::type multiList) {
+    value = multiList;
+  }
+
+ private:
+  T value;
 };
 
 class BufferFactory {
@@ -81,6 +117,11 @@ class BufferFactory {
   Buffer<T, dimension> createBuffer(const std::size_t *sizeList) {
     return Buffer<T, dimension>(std::array<std::size_t, dimension>({sizeList}));
   }
+
+  template<class T, std::size_t dimension>
+  Buffer<T, dimension> createBuffer(typename MultiInitializerList<T, dimension>::type multiList) {
+
+  };
 
 };
 
