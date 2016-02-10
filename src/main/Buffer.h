@@ -25,54 +25,52 @@ struct MultiInitializerList<T, 0> {
   using type = T;
 };
 
+template<class T>
+class BufferBase {
+ protected:
+  T *memory_;
+  bool selfOwned;
+};
+
 template<class T, std::size_t dimension>
-class Buffer {
+class Buffer: public BufferBase<T> {
  public:
   Buffer() = delete;
 
   Buffer(const typename MultiInitializerList<T, dimension>::type &multiList) {
     auto iterator = multiList.begin();
-    for (std::size_t i = 0; i < sizes_[0]; ++i) {
-      if (iterator != multiList.end()) {
-        this->operator[](i).fromInitializerList(*iterator);
-        iterator++;
-      } else {
-
-      }
-
-    }
-    selfOwnend = true;
+    this->fromInitializerList(multiList);
+    initMemory();
   }
 
   Buffer(std::array<std::size_t, dimension> &&sizes) {
 //    static_assert(sizeof...(Types) == dimension, "Buffer initialized with in compatible number of sizes!");
-    sizes_ = std::forward<std::array<std::size_t, dimension>>(sizes);
-    memory_ = new T[getTotalSize()];
-    selfOwnend = true;
+    this->sizes_ = std::forward<std::array<std::size_t, dimension>>(sizes);
+    initMemory();
   }
 
   Buffer(Buffer<T, dimension + 1> &parentBuffer, std::size_t index) {
     /**
      * Reassign the size.
      */
-    auto sizeIterator = sizes_.begin();
+    auto sizeIterator = this->sizes_.begin();
     sizeIterator++;
     std::copy(
         begin(parentBuffer.getSizes()) + 1,
         end(parentBuffer.getSizes()),
-        begin(sizes_));
+        begin(this->sizes_));
     /**
      * Set the pointer.
      */
-    memory_ = parentBuffer.getMemory() + index * getTotalSize();
+    this->memory_ = parentBuffer.getMemory() + index * getTotalSize();
     /**
      * Mark as not self-owned;
      */
-    selfOwnend = false;
+    this->selfOwned = false;
   }
 
   ~Buffer() {
-    if (selfOwnend) {
+    if (this->selfOwned) {
 //      delete memory_;
     }
   };
@@ -89,7 +87,8 @@ class Buffer {
   }
 
   void initMemory() {
-    this->memory_ = reinterpret_cast<T *>(malloc(sizeof(T) * getTotalSize()));
+    this->memory_ = new T[getTotalSize()];
+    this->selfOwned = true;
   }
 
   std::size_t getTotalSize() {
@@ -118,18 +117,15 @@ class Buffer {
   }
 
   T *getMemory() const {
-    return memory_;
+    return this->memory_;
   }
 
   std::array<std::size_t, dimension> &getSizes() {
-    return sizes_;
+    return this->sizes_;
   };
 
  private:
   std::array<std::size_t, dimension> sizes_;
-  T *memory_;
-  bool selfOwnend;
-
   void reScale() {
 
   }
@@ -137,48 +133,45 @@ class Buffer {
 };
 
 template<class T>
-class Buffer<T, 0> {
+class Buffer<T, 0>: public BufferBase<T> {
  public:
   Buffer() : T() {
 
   }
 
   Buffer(const Buffer<T, 1> &parent, int index) {
-    value = parent.getMemory() + index;
-    selfOwned = false;
+    this->memory_ = parent.getMemory() + index;
+    this->selfOwned = false;
   }
 
   T operator[](std::size_t index) = delete;
 
   void fromInitializerList(const typename MultiInitializerList<T, 0>::type &multiList) {
-    *value = multiList;
+    *(this->memory_) = multiList;
   }
 
   void fromDefaultConstructor() {
-    new (value) T;
+    new(this->memory_) T;
   }
 
   T operator()() {
-    return *value;
+    return *(this->memory_);
   }
 
   T get() {
-    return *value;
+    return *(this->memory_);
   }
 
   void set(const T &value_) {
-    *value = value_;
+    *(this->memory_) = value_;
   }
 
   ~Buffer() {
-    if (selfOwned) {
-      delete value;
+    if (this->selfOwned) {
+      delete (this->memory_);
     }
   }
 
- private:
-  T *value;
-  bool selfOwned;
 };
 
 class BufferFactory {
@@ -194,10 +187,12 @@ class BufferFactory {
     return Buffer<T, dimension>(std::array<std::size_t, dimension>({sizeList}));
   }
 
-//  template<class T, std::size_t dimension>
-//  Buffer<T, dimension> createBuffer(typename MultiInitializerList<T, dimension>::type multiList) {
-//
-//  };
+  template<class T, std::size_t dimension>
+  Buffer<T, dimension> createBuffer(
+      std::array<std::size_t, dimension> &&sizes,
+      typename MultiInitializerList<T, dimension>::type multiList) {
+
+  };
  private:
 
 };
