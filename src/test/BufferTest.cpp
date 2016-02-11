@@ -64,5 +64,8 @@ int main() {
   logger->log(bufferm5[2][0].get());
   logger->log(bufferm5[2][1].get());
   logger->log(bufferm5[2][2].get());
+
+//  Buffer<int, 2> bufferm6<3, 3>({{}});
+
   return 0;
 }

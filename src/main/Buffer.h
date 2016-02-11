@@ -53,6 +53,16 @@ class Buffer: public BufferBase<T> {
     initMemory();
   }
 
+//  template<int ...sizes>
+//  Buffer(const typename MultiInitializerList<T, sizeof...(sizes)>::type &multiList):
+//      Buffer(std::array<std::size_t, dimension>({sizes...})){
+//    static_assert(sizeof...(sizes) == dimension, "Sizes should match!");
+////    this->sizes_ = std::forward<std::array<std::size_t, dimension>>(
+////        sizes);
+//    initMemory();
+//    this->fromInitializerList(multiList);
+//  };
+
   Buffer(Buffer<T, dimension + 1> &parentBuffer, std::size_t index) {
     /**
      * Reassign the size.
