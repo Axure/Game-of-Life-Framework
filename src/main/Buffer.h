@@ -30,7 +30,11 @@ class BufferBase {
  protected:
   T *memory_;
   bool selfOwned;
+  static T zeroTemplate;
 };
+
+template<class T>
+T BufferBase<T>::zeroTemplate = T();
 
 template<class T, std::size_t dimension>
 class Buffer: public BufferBase<T> {
@@ -151,7 +155,10 @@ class Buffer<T, 0>: public BufferBase<T> {
   }
 
   void fromDefaultConstructor() {
-    new(this->memory_) T;
+    new(this->memory_) T();
+//    std::copy(&BufferBase<T>::zeroTemplate,
+//              &BufferBase<T>::zeroTemplate + 1,
+//              this->memory_);
   }
 
   T operator()() {
@@ -186,6 +193,12 @@ class BufferFactory {
   Buffer<T, dimension> createBuffer(const std::size_t *sizeList) {
     return Buffer<T, dimension>(std::array<std::size_t, dimension>({sizeList}));
   }
+
+  template<class T, int ...sizes>
+  Buffer<T, sizeof...(sizes)> createBuffer() {
+    constexpr auto length = sizeof...(sizes);
+    return Buffer<T, length>(std::array<std::size_t, length>({sizes...}));
+  };
 
   template<class T, std::size_t dimension>
   Buffer<T, dimension> createBuffer(

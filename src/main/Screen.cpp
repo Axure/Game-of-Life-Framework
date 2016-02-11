@@ -48,3 +48,5 @@ std::tuple<int, int> Screen::getTerminalSize() {
   return std::make_tuple(std::move(w.ws_col), std::move(w.ws_row));
 #endif
 }
+
+

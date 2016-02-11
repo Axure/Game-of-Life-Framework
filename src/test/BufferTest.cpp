@@ -45,5 +45,9 @@ int main() {
   logger->log(bufferm3[1][1].get());
   logger->log(bufferm3[1][2].get());
 
+  auto bufferm4 = bufferFactory.createBuffer<int, 2, 3, 2>();
+  bufferm4.fromInitializerList({{{1}}});
+  logger->log(bufferm4.getTotalSize());
+
   return 0;
 }
