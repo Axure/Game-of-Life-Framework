@@ -8,8 +8,8 @@
 int main() {
   auto buffer = Buffer<char, 3>(std::array<std::size_t, 3>({{1, 2, 3}}));
   auto bufferFactory = BufferFactory();
-  auto buffer2 = bufferFactory.createBuffer<char>(std::array<std::size_t, 3>({{1, 2, 3}}));
-  Buffer<char, 3> buffer3 = bufferFactory.createBuffer<char, 3>({1, 2, 3});
+//  auto buffer2 = bufferFactory.createBuffer<char>(std::array<std::size_t, 3>({{1, 2, 3}}));
+  auto buffer3 = bufferFactory.createBuffer<char, 1, 2, 3>();
 
   std::cout << buffer3.getTotalSize() << std::endl;
 
@@ -17,15 +17,16 @@ int main() {
   auto logger = loggerFactory.getSingletonLogger();
   logger->log("Hi!");
 
-  auto buffer0 = bufferFactory.createBuffer<char, 1>({2});
+  auto buffer0 = bufferFactory.createBuffer<char, 2>();
   buffer0.fromInitializerList({'1', '2'});
   logger->log(buffer0[0].get());
+  logger->log(buffer0[1].get());
 
-  auto bufferm1 = bufferFactory.createBuffer<int, 2>({1, 1});
+  auto bufferm1 = bufferFactory.createBuffer<int, 1, 1>();
   bufferm1.fromInitializerList({{1}});
   logger->log(bufferm1[0][0].get());
 
-  auto bufferm2 = bufferFactory.createBuffer<int, 2>({2, 3});
+  auto bufferm2 = bufferFactory.createBuffer<int, 2, 3>();
   bufferm2.fromInitializerList({{1, 2, 3}, {4, 5, 6}});
   logger->log(bufferm2[0][0].get());
   logger->log(bufferm2[0][1].get());
@@ -36,8 +37,8 @@ int main() {
   (bufferm2[0][0]).set(7);
   logger->log(bufferm2[0][0].get());
 
-  auto bufferm3 = bufferFactory.createBuffer<int, 2>({2, 3});
-  bufferm3.fromInitializerList({{1, 2 }});
+  auto bufferm3 = bufferFactory.createBuffer<int, 2, 3>();
+  bufferm3.fromInitializerList({{1, 2}});
   logger->log(bufferm3[0][0].get());
   logger->log(bufferm3[0][1].get());
   logger->log(bufferm3[0][2].get());
@@ -49,5 +50,19 @@ int main() {
   bufferm4.fromInitializerList({{{1}}});
   logger->log(bufferm4.getTotalSize());
 
+  auto bufferm5 = bufferFactory.createBuffer<int, 3, 3>({
+                                                            {1, 2, 3},
+                                                            {4, 5, 6},
+                                                            {7, 8, 9}
+                                                        });
+  logger->log(bufferm5[0][0].get());
+  logger->log(bufferm5[0][1].get());
+  logger->log(bufferm5[0][2].get());
+  logger->log(bufferm5[1][0].get());
+  logger->log(bufferm5[1][1].get());
+  logger->log(bufferm5[1][2].get());
+  logger->log(bufferm5[2][0].get());
+  logger->log(bufferm5[2][1].get());
+  logger->log(bufferm5[2][2].get());
   return 0;
 }

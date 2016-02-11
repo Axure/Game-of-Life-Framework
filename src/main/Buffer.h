@@ -41,11 +41,11 @@ class Buffer: public BufferBase<T> {
  public:
   Buffer() = delete;
 
-  Buffer(const typename MultiInitializerList<T, dimension>::type &multiList) {
-    auto iterator = multiList.begin();
-    this->fromInitializerList(multiList);
-    initMemory();
-  }
+//  Buffer(const typename MultiInitializerList<T, dimension>::type &multiList) {
+//    auto iterator = multiList.begin();
+//    this->fromInitializerList(multiList);
+//    initMemory();
+//  }
 
   Buffer(std::array<std::size_t, dimension> &&sizes) {
 //    static_assert(sizeof...(Types) == dimension, "Buffer initialized with in compatible number of sizes!");
@@ -101,7 +101,7 @@ class Buffer: public BufferBase<T> {
     });
   }
 
-  void fromInitializerList(const typename MultiInitializerList<T, dimension>::type &multiList) {
+  Buffer fromInitializerList(const typename MultiInitializerList<T, dimension>::type &multiList) {
     auto iterator = multiList.begin();
     for (std::size_t i = 0; i < sizes_[0]; ++i) {
       if (iterator != multiList.end()) {
@@ -112,6 +112,7 @@ class Buffer: public BufferBase<T> {
       }
 
     }
+    return *this;
   }
 
   void fromDefaultConstructor() {
@@ -198,6 +199,13 @@ class BufferFactory {
   Buffer<T, sizeof...(sizes)> createBuffer() {
     constexpr auto length = sizeof...(sizes);
     return Buffer<T, length>(std::array<std::size_t, length>({sizes...}));
+  };
+
+  template<class T, int ...sizes>
+  Buffer<T, sizeof...(sizes)> createBuffer(const typename MultiInitializerList<T, sizeof...(sizes)>::type &multiList) {
+    constexpr auto length = sizeof...(sizes);
+    return Buffer<T, length>(std::array<std::size_t, length>({sizes...}))
+        .fromInitializerList(multiList);
   };
 
   template<class T, std::size_t dimension>
