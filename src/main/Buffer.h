@@ -9,13 +9,15 @@
 #include <memory>
 #include <numeric>
 #include <cstdlib>
+#include <type_traits>
 
 using std::begin;
 using std::end;
+using size_t_ = std::size_t;
 
-//constexpr std::size_t operator "" _sz(unsigned long long n) { return n; }
+//constexpr size_t_ operator "" _sz(unsigned long long n) { return n; }
 
-template<class T, std::size_t dimension>
+template<class T, size_t_ dimension>
 struct MultiInitializerList {
   using type = std::initializer_list<typename MultiInitializerList<T, dimension - 1>::type>;
 };
@@ -36,7 +38,7 @@ class BufferBase {
 template<class T>
 T BufferBase<T>::zeroTemplate = T();
 
-template<class T, std::size_t dimension>
+template<class T, size_t_ dimension>
 class Buffer: public BufferBase<T> {
  public:
   Buffer() = delete;
@@ -47,23 +49,23 @@ class Buffer: public BufferBase<T> {
 //    initMemory();
 //  }
 
-  Buffer(std::array<std::size_t, dimension> &&sizes) {
+  Buffer(std::array<size_t_, dimension> &&sizes) {
 //    static_assert(sizeof...(Types) == dimension, "Buffer initialized with in compatible number of sizes!");
-    this->sizes_ = std::forward<std::array<std::size_t, dimension>>(sizes);
+    this->sizes_ = std::forward<std::array<size_t_, dimension>>(sizes);
     initMemory();
   }
 
 //  template<int ...sizes>
 //  Buffer(const typename MultiInitializerList<T, sizeof...(sizes)>::type &multiList):
-//      Buffer(std::array<std::size_t, dimension>({sizes...})){
+//      Buffer(std::array<size_t_, dimension>({sizes...})){
 //    static_assert(sizeof...(sizes) == dimension, "Sizes should match!");
-////    this->sizes_ = std::forward<std::array<std::size_t, dimension>>(
+////    this->sizes_ = std::forward<std::array<size_t_, dimension>>(
 ////        sizes);
 //    initMemory();
 //    this->fromInitializerList(multiList);
 //  };
 
-  Buffer(Buffer<T, dimension + 1> &parentBuffer, std::size_t index) {
+  Buffer(Buffer<T, dimension + 1> &parentBuffer, size_t_ index) {
     /**
      * Reassign the size.
      */
@@ -89,7 +91,7 @@ class Buffer: public BufferBase<T> {
     }
   };
 
-  Buffer<T, dimension - 1> operator[](std::size_t index) {
+  Buffer<T, dimension - 1> operator[](size_t_ index) {
     /**
      * Reassign the size.
      */
@@ -105,15 +107,15 @@ class Buffer: public BufferBase<T> {
     this->selfOwned = true;
   }
 
-  std::size_t getTotalSize() {
-    return std::accumulate(begin(sizes_), end(sizes_), 1, [](std::size_t c, std::size_t p) {
+  size_t_ getTotalSize() {
+    return std::accumulate(begin(sizes_), end(sizes_), 1, [](size_t_ c, size_t_ p) {
       return c * p;
     });
   }
 
   Buffer fromInitializerList(const typename MultiInitializerList<T, dimension>::type &multiList) {
     auto iterator = multiList.begin();
-    for (std::size_t i = 0; i < sizes_[0]; ++i) {
+    for (size_t_ i = 0; i < sizes_[0]; ++i) {
       if (iterator != multiList.end()) {
         this->operator[](i).fromInitializerList(*iterator);
         iterator++;
@@ -126,7 +128,7 @@ class Buffer: public BufferBase<T> {
   }
 
   void fromDefaultConstructor() {
-    for (std::size_t i = 0; i < sizes_[0]; ++i) {
+    for (size_t_ i = 0; i < sizes_[0]; ++i) {
       this->operator[](i).fromDefaultConstructor();
     }
   }
@@ -135,12 +137,39 @@ class Buffer: public BufferBase<T> {
     return this->memory_;
   }
 
-  std::array<std::size_t, dimension> &getSizes() {
+  std::array<size_t_, dimension> &getSizes() {
     return this->sizes_;
   };
 
+//  template<size_t_ firstIndex, size_t_ ...restIndexes>
+//  inline T get() {
+//    static_assert(sizeof...(restIndexes) == dimension - 1, "?");
+//    return this->operator[](firstIndex).get<restIndexes...>();
+//  }
+
+  template<typename FirstInt, typename ...RestInt>
+  inline T get(FirstInt firstIndex, RestInt ...restIndex) {
+    static_assert(sizeof...(RestInt) == dimension - 1, "?");
+    static_assert(std::is_convertible<FirstInt, size_t_>::value, "?");
+    return this->operator[](static_cast<size_t_ >(firstIndex))
+//        .get<RestInt...>(restIndex...);
+        .get(restIndex...);
+  }
+
+//  template<size_t_ firstIndex, size_t_ ...restIndexes>
+//  inline T set() {
+//    static_assert(sizeof...(restIndexes) == dimension - 1, "?");
+//    return this->operator[](firstIndex).get<restIndexes...>();
+//  }
+//
+//  template<size_t_ firstIndex, size_t_ ...restIndexes>
+//  inline void bindEventListener() {
+//    static_assert(sizeof...(restIndexes) == dimension - 1, "?");
+//  }
+
  private:
-  std::array<std::size_t, dimension> sizes_;
+  std::array<size_t_, dimension> sizes_;
+
   void reScale() {
 
   }
@@ -159,7 +188,7 @@ class Buffer<T, 0>: public BufferBase<T> {
     this->selfOwned = false;
   }
 
-  T operator[](std::size_t index) = delete;
+  T operator[](size_t_ index) = delete;
 
   void fromInitializerList(const typename MultiInitializerList<T, 0>::type &multiList) {
     *(this->memory_) = multiList;
@@ -186,6 +215,7 @@ class Buffer<T, 0>: public BufferBase<T> {
 
   ~Buffer() {
     if (this->selfOwned) {
+      this->memory_->~T();
       delete (this->memory_);
     }
   }
@@ -195,32 +225,33 @@ class Buffer<T, 0>: public BufferBase<T> {
 class BufferFactory {
 
  public:
-  template<class T, std::size_t dimension>
-  Buffer<T, dimension> createBuffer(std::array<std::size_t, dimension> &&sizes) {
-    return Buffer<T, dimension>(std::forward<std::array<std::size_t, dimension>>(sizes));
+  template<class T, size_t_ dimension>
+  static Buffer<T, dimension> createBuffer(std::array<size_t_, dimension> &&sizes) {
+    return Buffer<T, dimension>(std::forward<std::array<size_t_, dimension>>(sizes));
   }
 
-  template<class T, std::size_t dimension>
-  Buffer<T, dimension> createBuffer(const std::size_t *sizeList) {
-    return Buffer<T, dimension>(std::array<std::size_t, dimension>({sizeList}));
+  template<class T, size_t_ dimension>
+  static Buffer<T, dimension> createBuffer(const size_t_ *sizeList) {
+    return Buffer<T, dimension>(std::array<size_t_, dimension>({sizeList}));
   }
 
   template<class T, int ...sizes>
-  Buffer<T, sizeof...(sizes)> createBuffer() {
+  static Buffer<T, sizeof...(sizes)> createBuffer() {
     constexpr auto length = sizeof...(sizes);
-    return Buffer<T, length>(std::array<std::size_t, length>({sizes...}));
+    return Buffer<T, length>(std::array<size_t_, length>({sizes...}));
   };
 
   template<class T, int ...sizes>
-  Buffer<T, sizeof...(sizes)> createBuffer(const typename MultiInitializerList<T, sizeof...(sizes)>::type &multiList) {
+  static Buffer<T, sizeof...(sizes)> createBuffer(const typename MultiInitializerList<T,
+                                                                                      sizeof...(sizes)>::type &multiList) {
     constexpr auto length = sizeof...(sizes);
-    return Buffer<T, length>(std::array<std::size_t, length>({sizes...}))
+    return Buffer<T, length>(std::array<size_t_, length>({sizes...}))
         .fromInitializerList(multiList);
   };
 
-  template<class T, std::size_t dimension>
-  Buffer<T, dimension> createBuffer(
-      std::array<std::size_t, dimension> &&sizes,
+  template<class T, size_t_ dimension>
+  static Buffer<T, dimension> createBuffer(
+      std::array<size_t_, dimension> &&sizes,
       typename MultiInitializerList<T, dimension>::type multiList) {
 
   };
