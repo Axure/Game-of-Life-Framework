@@ -10,7 +10,10 @@ target_link_libraries(GameOfLif
 add_library(Screen
         ../../src/main/Screen.cpp
         ../../src/main/Screen.h
-        ../../src/main/Buffer.h)
+        ../../src/main/Buffer.h ../../src/main/utils/Any.cpp ../../src/main/utils/Any.h)
+target_link_libraries(Screen
+        ${CURSES_LIBRARIES}
+        )
 
 add_library(Game
         ../../src/main/Game.cpp
@@ -20,4 +23,10 @@ add_library(Game
 add_library(Logger
         ../../src/main/utils/Logger.cpp
         ../../src/main/utils/Logger.h
-        ../../src/main/utils/LoggerFactory.cpp ../../src/main/utils/LoggerFactory.h)
+        ../../src/main/utils/LoggerFactory.cpp
+        ../../src/main/utils/LoggerFactory.h)
+
+add_library(Timer
+        ../../src/main/utils/Timer.cpp
+        ../../src/main/utils/Timer.h)
+target_link_libraries(Timer Logger)
