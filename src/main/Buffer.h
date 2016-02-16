@@ -149,11 +149,32 @@ class Buffer: public BufferBase<T> {
 
   template<typename FirstInt, typename ...RestInt>
   inline T get(FirstInt firstIndex, RestInt ...restIndex) {
-    static_assert(sizeof...(RestInt) == dimension - 1, "?");
+    static_assert(sizeof...(RestInt) == dimension - 1,
+                  "The number of indices provided is incorrect!");
     static_assert(std::is_convertible<FirstInt, size_t_>::value, "?");
     return this->operator[](static_cast<size_t_ >(firstIndex))
 //        .get<RestInt...>(restIndex...);
         .get(restIndex...);
+  }
+
+  /**
+   * @method set
+   *   Note that the value is set as the first argument, in compliance with variadic argument list.
+   * @param value The value.
+   * @param firstIndex The first index of the variable to be set.
+   * @param restIndex The rest of the indices.
+   *
+   *
+   */
+  template<typename FirstInt, typename ...RestInt>
+  inline Buffer &set(T value, FirstInt firstIndex, RestInt ...restIndex) {
+    static_assert(sizeof...(RestInt) == dimension - 1,
+                  "The number of indices provided is incorrect!");
+    static_assert(std::is_convertible<FirstInt, size_t_>::value, "?");
+    this->operator[](static_cast<size_t_ >(firstIndex))
+//        .get<RestInt...>(restIndex...);
+        .set(value, restIndex...);
+    return *this;
   }
 
 //  template<size_t_ firstIndex, size_t_ ...restIndexes>
@@ -166,6 +187,20 @@ class Buffer: public BufferBase<T> {
 //  inline void bindEventListener() {
 //    static_assert(sizeof...(restIndexes) == dimension - 1, "?");
 //  }
+
+  void fill(T &&value) {
+    auto totalSize = getTotalSize();
+    for (int i = 0; i < totalSize; ++i) {
+      std::copy(&value, (&value) + 1, this->memory_ + i);
+    }
+  }
+
+  void fill(T &value) {
+    auto totalSize = getTotalSize();
+    for (int i = 0; i < totalSize; ++i) {
+      std::copy(&value, (&value) + 1, this->memory_ + i);
+    }
+  }
 
  private:
   std::array<size_t_, dimension> sizes_;

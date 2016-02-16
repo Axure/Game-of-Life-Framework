@@ -50,10 +50,10 @@ int main() {
   logger->log(bufferm4.getTotalSize());
 
   auto bufferm5 = BufferFactory::createBuffer<int, 3, 3>({
-                                                            {1, 2, 3},
-                                                            {4, 5, 6},
-                                                            {7, 8, 9}
-                                                        });
+                                                             {1, 2, 3},
+                                                             {4, 5, 6},
+                                                             {7, 8, 9}
+                                                         });
   logger->log(bufferm5[0][0].get());
   logger->log(bufferm5[0][1].get());
   logger->log(bufferm5[0][2].get());
@@ -64,10 +64,22 @@ int main() {
   logger->log(bufferm5[2][1].get());
   logger->log(bufferm5[2][2].get());
   logger->log(bufferm5.get(2, 2));
+  bufferm5.set(178, 2, 2);
+  logger->log(bufferm5.get(2, 2));
 //  logger->log(bufferm5.get(2, 3, 4));
 //  logger->log(bufferm5.get(2, buffer));
 
 //  Buffer<int, 2> bufferm6<3, 3>({{}});
+  auto bufferm7 = BufferFactory::createBuffer<char, 2, 2>({{'2', '3'}, {'4', '5'}});
+  logger->log(bufferm7[0][0].get());
+  logger->log(bufferm7[0][1].get());
+  logger->log(bufferm7[1][0].get());
+  logger->log(bufferm7[1][1].get());
+  bufferm7.fill('1');
+  logger->log(bufferm7[0][0].get());
+  logger->log(bufferm7[0][1].get());
+  logger->log(bufferm7[1][0].get());
+  logger->log(bufferm7[1][1].get());
 
   return 0;
 }
