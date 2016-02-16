@@ -13,6 +13,7 @@ add_library(Screen
         ../../src/main/Buffer.h ../../src/main/utils/Any.cpp ../../src/main/utils/Any.h)
 target_link_libraries(Screen
         ${CURSES_LIBRARIES}
+        Timer
         )
 
 add_library(Game

@@ -9,6 +9,8 @@
 #include <sys/ioctl.h>
 #include <ncurses.h>
 #endif
+#include <iostream>
+#include <thread>
 
 using std::size_t;
 
@@ -26,12 +28,21 @@ void Screen::fitSize() {
 }
 
 void Screen::attach(std::function<bool()> ifContinue) {
-  this->fitSize();
   initscr();
-  printw("Haha");
-  while (ifContinue()) {
+  this->fitSize();
+//  printw("Haha");
+  /**
+   * Note that the first screen must be rendered.
+   * The `ifContinue` function is only evaluated after it has beeen rendered once.
+   */
+//  std::thread renderingThread([&] {
+  do {
     reRender();
-  }
+//      std::cout << 1 << std::endl;
+  } while (ifContinue());
+//  });
+//  renderingThread.join();
+
 }
 
 void Screen::reRender() {
@@ -39,7 +50,7 @@ void Screen::reRender() {
   clear();
   for (int i = 0; i < width; ++i) {
     for (int j = 0; j < height; ++j) {
-      printw("%c", (*buffer)[i][j].get());
+      printw("%c", (*buffer).get(i, j));
     }
   }
   refresh();
@@ -67,12 +78,18 @@ std::tuple<int, int> Screen::getTerminalSize() {
 //      printf("Console Buffer Height: %d\n", csbi.dwSize.Y);
 //  }
 //#else
-  static struct winsize w;
-  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-  return std::make_tuple(std::move(w.ws_col), std::move(w.ws_row));
+//  static struct winsize w;
+//  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+//  return std::make_tuple(std::move(w.ws_col), std::move(w.ws_row));
 //#endif
   int x, y;
   getmaxyx(stdscr, y, x);
+  if (y < 0 || x < 0) {
+    initscr();
+    getmaxyx(stdscr, y, x);
+    endwin();
+  }
+
   return std::make_tuple(std::move(x), std::move(y));
 }
 
@@ -84,4 +101,9 @@ void Screen::print(const char (&format)[length], Types &&...args) {
 
 Screen::~Screen() {
 
+}
+
+void Screen::fill(char charToFill) {
+//  std::cout << ("Filling with ") << charToFill << std::endl;
+  this->buffer->fill(charToFill);
 }

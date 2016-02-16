@@ -33,5 +33,14 @@ class Timer: NonCopyable {
   double interval;
 };
 
+class Delayer {
+ public:
+  Delayer(double interval = 1);
+  void delay();
+  ~Delayer();
+ private:
+  double interval;
+};
+
 #endif
 #endif //GAMEOFLIF_TIMER_H

@@ -11,7 +11,8 @@ target_include_directories(ScreenTest PUBLIC
         ../../src/main/)
 target_link_libraries(ScreenTest
         Screen
-        Logger)
+        Logger
+        Timer)
 
 add_executable(TimerTest
         ../../src/test/TimerTest.cpp)

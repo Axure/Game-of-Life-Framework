@@ -19,6 +19,7 @@ class Screen {
   void reRender();
   void detach();
   void fitSize();
+  void fill(char charToFill);
   ~Screen();
 
   template<unsigned int length, class ...Types>

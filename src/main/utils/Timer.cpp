@@ -37,3 +37,17 @@ void Timer::run() {
 Timer::~Timer() {
 
 }
+
+Delayer::Delayer(double interval): interval(interval) {
+
+}
+
+void Delayer::delay() {
+  const milliseconds realInterval(
+      static_cast<int>(interval * 1000));
+  sleep_for(realInterval);
+}
+
+Delayer::~Delayer() {
+
+}
