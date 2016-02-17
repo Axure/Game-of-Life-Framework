@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <thread>
+#include <utils/LoggerFactory.h>
 #include "Screen.h"
 #include "utils/Timer.h"
 using namespace std::literals;
@@ -19,6 +20,7 @@ int main() {
       delayer.delay();
       return true;
     });
+    screen.run();
   });
   std::thread settingThread([&] {
     screen.fill('1');
@@ -26,6 +28,7 @@ int main() {
   std::cout << "After!" << std::endl;
   renderingThread.join();
   settingThread.join();
-
+  auto logger = LoggerFactory::getSingletonLogger();
+  logger->flush();
   return 0;
 }

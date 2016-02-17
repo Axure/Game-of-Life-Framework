@@ -41,6 +41,9 @@ T BufferBase<T>::zeroTemplate = T();
 template<class T, size_t_ dimension>
 class Buffer: public BufferBase<T> {
  public:
+
+  using SizeArrayType = std::array<size_t_, dimension>;
+
   Buffer() = delete;
 
 //  Buffer(const typename MultiInitializerList<T, dimension>::type &multiList) {
@@ -49,9 +52,9 @@ class Buffer: public BufferBase<T> {
 //    initMemory();
 //  }
 
-  Buffer(std::array<size_t_, dimension> &&sizes) {
+  Buffer(SizeArrayType &&sizes) {
 //    static_assert(sizeof...(Types) == dimension, "Buffer initialized with in compatible number of sizes!");
-    this->sizes_ = std::forward<std::array<size_t_, dimension>>(sizes);
+    this->sizes_ = std::forward<SizeArrayType>(sizes);
     initMemory();
   }
 
@@ -108,9 +111,7 @@ class Buffer: public BufferBase<T> {
   }
 
   size_t_ getTotalSize() {
-    return std::accumulate(begin(sizes_), end(sizes_), 1, [](size_t_ c, size_t_ p) {
-      return c * p;
-    });
+    return Buffer::totalSize_(sizes_);
   }
 
   Buffer fromInitializerList(const typename MultiInitializerList<T, dimension>::type &multiList) {
@@ -137,7 +138,7 @@ class Buffer: public BufferBase<T> {
     return this->memory_;
   }
 
-  std::array<size_t_, dimension> &getSizes() {
+  SizeArrayType &getSizes() {
     return this->sizes_;
   };
 
@@ -202,12 +203,28 @@ class Buffer: public BufferBase<T> {
     }
   }
 
+  void rescale(SizeArrayType &&newSize) {
+    if (Buffer::totalSize_(newSize) > this->getTotalSize()) {
+
+    }
+    this->sizes_ = newSize;
+  }
+
+  void rescale(
+      typename MultiInitializerList<size_t_, dimension>::type &&newSize) {
+    rescale(SizeArrayType(newSize));
+  }
+
  private:
   std::array<size_t_, dimension> sizes_;
 
-  void reScale() {
-
-  }
+  static size_t_ totalSize_(SizeArrayType sizeArray) {
+    return std::accumulate(begin(sizeArray), end(sizeArray),
+                           static_cast<size_t >(1),
+                           [](size_t_ c, size_t_ p) -> size_t {
+                             return c * p;
+                           });
+  };
 
 };
 

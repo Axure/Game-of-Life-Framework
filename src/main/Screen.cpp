@@ -11,37 +11,42 @@
 #endif
 #include <iostream>
 #include <thread>
+#include "utils/LoggerFactory.h"
 
 using std::size_t;
 
-Screen::Screen() {
+Screen::Screen(): on(false) {
   std::array<size_t, 2> sizes({{maxWidth, maxHeight}});
+  oldWidth = maxWidth;
+  oldHeight = maxHeight;
   buffer = std::make_shared<Buffer<char, 2>>(
       std::move(sizes));
 }
 
 void Screen::fitSize() {
+  auto logger = LoggerFactory::getSingletonLogger();
   std::tie(width, height) = Screen::getTerminalSize();
-  if (width > oldHeight * 2 || height > oldHeight * 2) {
+  if (width > oldHeight || height > oldHeight) {
 //    getmaxyx();
+    buffer->rescale({width, height});
+    logger->logf(LogLevel::VALUES::INFO,
+                 "Rescaled with {%d, %d}!", width, height);
+    std::stringstream sMessage;
+    sMessage << "Rescaled with"
+        << width << ", " << height
+        << ".";
+    logger->delayedLog(sMessage.str());
+    oldHeight = height;
+    oldWidth = width;
   }
 }
 
 void Screen::attach(std::function<bool()> ifContinue) {
   initscr();
+  this->on = true;
+  this->ifContinue_ = ifContinue;
   this->fitSize();
 //  printw("Haha");
-  /**
-   * Note that the first screen must be rendered.
-   * The `ifContinue` function is only evaluated after it has beeen rendered once.
-   */
-//  std::thread renderingThread([&] {
-  do {
-    reRender();
-//      std::cout << 1 << std::endl;
-  } while (ifContinue());
-//  });
-//  renderingThread.join();
 
 }
 
@@ -57,7 +62,9 @@ void Screen::reRender() {
 }
 
 void Screen::detach() {
+  this->ifContinue_ = [] { return false; };
   endwin();
+  this->on = false;
 }
 
 template<unsigned int length, class ...Types>
@@ -106,4 +113,44 @@ Screen::~Screen() {
 void Screen::fill(char charToFill) {
 //  std::cout << ("Filling with ") << charToFill << std::endl;
   this->buffer->fill(charToFill);
+}
+
+void Screen::run() {
+/**
+   * Note that the first screen must be rendered.
+   * The `ifContinue` function is only evaluated after it has beeen rendered once.
+   */
+  int c;
+//  detach();
+  auto logger = LoggerFactory::getSingletonLogger();
+
+  std::thread keyThread([&] {
+    do {
+      c = wgetch(stdscr);
+      logger->delayedLog(c);
+      detach();
+//      if (c == KEY_UP) {
+//        continue;
+//      }
+//      if (c == KEY_DOWN) {
+//        detach();
+//        break;
+//      }
+
+    } while (this->ifContinue_());
+
+  });
+
+  std::thread renderThread([&] {
+    do {
+      if (this->on) {
+        reRender();
+      }
+//      std::cout << 1 << std::endl;
+    } while (this->ifContinue_());
+  });
+
+  keyThread.join();
+  renderThread.join();
+
 }

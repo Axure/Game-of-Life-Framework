@@ -16,6 +16,7 @@ class Screen {
  public:
   Screen();
   void attach(std::function<bool()> ifContinue);
+  void run();
   void reRender();
   void detach();
   void fitSize();
@@ -35,6 +36,8 @@ class Screen {
   std::size_t width, height;
   std::size_t maxWidth = 50, maxHeight = 50;
   std::size_t oldWidth = 0, oldHeight = 0;
+  std::function<bool()> ifContinue_;
+  bool on;
  public:
   std::size_t getWidth() const {
     return width;

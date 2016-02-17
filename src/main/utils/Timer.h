@@ -39,6 +39,7 @@ class Delayer {
   void delay();
   ~Delayer();
  private:
+  int count;
   double interval;
 };
 

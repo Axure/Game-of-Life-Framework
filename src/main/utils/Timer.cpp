@@ -38,13 +38,14 @@ Timer::~Timer() {
 
 }
 
-Delayer::Delayer(double interval): interval(interval) {
+Delayer::Delayer(double interval): interval(interval), count(0) {
 
 }
 
 void Delayer::delay() {
   const milliseconds realInterval(
       static_cast<int>(interval * 1000));
+  count += 1;
   sleep_for(realInterval);
 }
 
