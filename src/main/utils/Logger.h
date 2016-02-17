@@ -6,9 +6,14 @@
 #define GAMEOFLIF_LOGGER_H
 #include <string>
 #include <iostream>
+#include <cstdio>
 #include <map>
 
 struct LogLevel {
+
+  typedef char* CharBuffer;
+  CharBuffer charBuffer;
+
   enum class VALUES {
     FATAL,
     CRITICAL,
@@ -20,9 +25,12 @@ struct LogLevel {
 
   LogLevel(VALUES value_ = VALUES::INFO) {
     value = value_;
+    charBuffer = new char[10]();
   }
 
-  ~LogLevel() { }
+  ~LogLevel() {
+    delete[] charBuffer;
+  }
 
   std::string toString() {
     switch (value) {
@@ -37,6 +45,27 @@ struct LogLevel {
       case VALUES::DEBUG:
         return "Debug";
     }
+  }
+
+  CharBuffer toChars() {
+    switch (value) {
+      case VALUES::FATAL:
+        strcpy(charBuffer, "Fatal");
+        break;
+      case VALUES::CRITICAL:
+        strcpy(charBuffer, "Critical");
+        break;
+      case VALUES::IMPORTANT:
+        strcpy(charBuffer, "Important");
+        break;
+      case VALUES::INFO:
+        strcpy(charBuffer, "Info");
+        break;
+      case VALUES::DEBUG:
+        strcpy(charBuffer, "Debug");
+        break;
+    }
+    return charBuffer;
   }
 
   bool operator==(VALUES logLevel) {
@@ -57,6 +86,13 @@ class Logger {
         << ", " << level.toString() << "]: "
         << message << std::endl;
   }
+
+  template<unsigned int length, class ...Types>
+  void logf(LogLevel level,
+            const char (&format)[length], Types &&...args) {
+    printf("[Logger id: %d, %s]: ", id, level.toChars());
+    printf(format, args...); // TODO: Concatenate these two sentences to ensure atomicity.
+  };
 
  private:
   LogLevel outputInfimum, outputSupremum;
