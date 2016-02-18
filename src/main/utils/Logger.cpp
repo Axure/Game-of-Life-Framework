@@ -46,6 +46,7 @@ Logger::Logger() : logBufferSize(defaultLogBufferSize) {
 }
 
 Logger::~Logger() {
+  this->flush();
   Logger::loggers.erase(id);
 }
 

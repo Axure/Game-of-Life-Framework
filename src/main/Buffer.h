@@ -10,6 +10,7 @@
 #include <numeric>
 #include <cstdlib>
 #include <type_traits>
+#include "utils/LoggerFactory.h"
 
 using std::begin;
 using std::end;
@@ -106,7 +107,7 @@ class Buffer: public BufferBase<T> {
   }
 
   void initMemory() {
-    this->memory_ = new T[getTotalSize()];
+    this->memory_ = new T[getTotalSize()]();
     this->selfOwned = true;
   }
 
@@ -203,16 +204,21 @@ class Buffer: public BufferBase<T> {
     }
   }
 
-  void rescale(SizeArrayType &&newSize) {
-    if (Buffer::totalSize_(newSize) > this->getTotalSize()) {
-
+  void rescale(SizeArrayType &&newSizes) {
+    auto newTotalSize = Buffer::totalSize_(newSizes);
+    // TODO: consider thread safety here...
+    if (newTotalSize > this->getTotalSize()) {
+      auto logger = LoggerFactory::getSingletonLogger();
+      logger->delayedLog("Rescaled!");
+      delete[] this->memory_;
+      this->memory_ = new T[newTotalSize]();
     }
-    this->sizes_ = newSize;
+    this->sizes_ = newSizes;
   }
 
   void rescale(
-      typename MultiInitializerList<size_t_, dimension>::type &&newSize) {
-    rescale(SizeArrayType(newSize));
+      typename MultiInitializerList<size_t_, dimension>::type &&newSizes) {
+    rescale(SizeArrayType(newSizes));
   }
 
  private:

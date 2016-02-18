@@ -15,11 +15,13 @@ int main() {
   int x, y;
   Delayer delayer(1.1);
   std::cout << "Before!" << std::endl;
+
+  screen.attach([&delayer] {
+    delayer.delay();
+    return true;
+  });
+
   std::thread renderingThread([&] {
-    screen.attach([&delayer] {
-      delayer.delay();
-      return true;
-    });
     screen.run();
   });
   std::thread settingThread([&] {

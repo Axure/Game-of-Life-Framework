@@ -74,6 +74,9 @@ struct LogLevel {
   }
 };
 
+/**
+ * TODO: Add time.
+ */
 class Logger {
   typedef char* CharBuffer;
  public:
