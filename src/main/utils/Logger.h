@@ -9,6 +9,16 @@
 #include <cstdio>
 #include <map>
 #include <sstream>
+#include <ctime>
+
+
+#ifndef AXUREZ_LOGGER_RELEASE
+#define AXUREZ_LOGGER_DEBUG(logger, message) \
+logger->bufferedLog(message, LogLevel::VALUES::DEBUG);
+#else
+#define AXUREZ_LOGGER_DEBUG(logger, message)
+#endif
+
 
 struct LogLevel {
 
@@ -88,28 +98,32 @@ class Logger {
   template<class T>
   void log(T message, LogLevel level = LogLevel::VALUES::INFO) {
     std::cout << "[Logger id: " << id
-        << ", " << level.toString() << "]: "
+        << ", " << level.toString()
+        << ", " << additionalInfo()
+        << "]: "
         << message << std::endl;
   }
 
   template<class T>
   void delayedLog(T message, LogLevel level = LogLevel::VALUES::INFO) {
     logBufferStream_ << "[Logger id: " << id
-        << ", " << level.toString() << "]: "
+        << ", " << level.toString()
+        << ", " << additionalInfo()
+        << "]: "
         << message << std::endl;
   }
 
   template<unsigned int length, class ...Types>
   void logf(LogLevel level,
             const char (&format)[length], Types &&...args) {
-    printf("[Logger id: %d, %s]: ", id, level.toChars());
+    printf("[Logger id: %d, %s, %s]: ", id, level.toChars(), additionalInfo());
     printf(format, args...); // TODO: Concatenate these two sentences to ensure atomicity.
   };
 
   template<unsigned int length, class ...Types>
   void delayedLogf(LogLevel level,
             const char (&format)[length], Types &&...args) {
-    printf("[Logger id: %d, %s]: ", id, level.toChars());
+    printf("[Logger id: %d, %s, %s]: ", id, level.toChars(), additionalInfo());
     printf(format, args...); // TODO: Concatenate these two sentences to ensure atomicity.
   };
 
@@ -118,9 +132,12 @@ class Logger {
   void flushBelow(LogLevel supremum);
   void flush();
 
+
  private:
   LogLevel outputInfimum, outputSupremum;
-
+  static std::time_t getCurrentTime();
+  static std::time_t currentTime_;
+  std::string additionalInfo();
   static int count;
   static std::map<int, Logger&> loggers;
   int id;
