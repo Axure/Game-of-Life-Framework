@@ -127,12 +127,12 @@ void Screen::run() {
   std::thread resizeThread([&] {
     int t_width_, t_height;
     assert(true);
-    logger->bufferedLog("Resizing thread started!");
+    logger->delayedLog("Resizing thread started!");
     AXUREZ_LOGGER_DEBUG(logger, "Resizing thread started!");
     do {
       getmaxyx(stdscr, t_height, t_width_);
       if (t_height != height || t_width_ != width) {
-        logger->bufferedLog("Terminal resized!");
+        logger->delayedLog("Terminal resized!");
         resize_term(t_width_, t_height);
       }
     } while (this->ifContinue_());

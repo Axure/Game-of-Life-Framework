@@ -64,6 +64,7 @@ std::time_t Logger::getCurrentTime() {
 }
 
 std::string Logger::additionalInfo() {
+  getCurrentTime();
   std::string str(std::asctime(std::localtime(&currentTime_)));
   assert(str.size() > 0);
   str.pop_back();
