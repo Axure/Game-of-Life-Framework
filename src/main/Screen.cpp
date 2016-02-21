@@ -15,7 +15,7 @@
 
 using std::size_t;
 
-Screen::Screen(): on(false) {
+Screen::Screen() : on(false) {
   std::array<size_t, 2> sizes({{maxWidth, maxHeight}});
   oldWidth = maxWidth;
   oldHeight = maxHeight;
@@ -62,9 +62,16 @@ void Screen::reRender() {
 }
 
 void Screen::detach() {
-  this->ifContinue_ = [] { return false; };
+  stop();
   endwin();
+}
+
+void Screen::stop() {
+  this->ifContinue_ = [] { return false; };
   this->on = false;
+
+//  pRenderingThread_->stop;
+//  delete pRenderingThread_;
 }
 
 template<unsigned int length, class ...Types>
@@ -138,12 +145,17 @@ void Screen::run() {
                                 "Terminal resized! [",
                                 t_width_,
                                 ", ",
-                               t_height, "]");
+                                t_height, "]");
         buffer->rescale({width, height});
         buffer->fill('#');
         resize_term(t_height, t_width_);
         reRender();
       }
+      /**
+       * For immediate response to the resizing,
+       * we use `on` instead of evaluating `ifContinue_()`,
+       * which may contain delays.
+       */
     } while (on);
   });
 
@@ -159,12 +171,15 @@ void Screen::run() {
 //        detach();
 //        break;
 //      }
-
+      /**
+       * For the same reason we use `on` here.
+       * But this loop would only proceed once a key is pressed.
+       */
     } while (on);
 
   });
 
-  std::thread renderThread([&] {
+  pRenderingThread_ = std::make_shared<std::thread>([&] {
     do {
       if (this->on) {
         reRender();
@@ -174,7 +189,7 @@ void Screen::run() {
   });
 
   keyThread.join();
-  renderThread.join();
+  pRenderingThread_->join();
   resizeThread.join();
 
 }

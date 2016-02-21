@@ -9,6 +9,7 @@
 #include <memory>
 #include <tuple>
 #include <functional>
+#include <thread>
 
 #include "Buffer.h"
 
@@ -17,6 +18,7 @@ class Screen {
   Screen();
   void attach(std::function<bool()> ifContinue);
   void run();
+  void stop();
   void reRender();
   void detach();
   void fitSize();
@@ -38,6 +40,8 @@ class Screen {
   std::size_t oldWidth = 0, oldHeight = 0;
   std::function<bool()> ifContinue_;
   bool on;
+
+  std::shared_ptr<std::thread> pRenderingThread_;
  public:
   std::size_t getWidth() const {
     return width;
