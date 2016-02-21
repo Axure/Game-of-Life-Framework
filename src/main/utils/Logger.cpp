@@ -7,6 +7,12 @@
 #include <cassert>
 #include "Logger.h"
 
+typedef char* CharBuffer;
+
+LogLevel::CharBufferEntity *LogLevel::charBufferEntity = new LogLevel::CharBufferEntity();
+int LogLevel::MAX_LENGTH = 10;
+CharBuffer LogLevel::charBuffer = LogLevel::charBufferEntity->get();
+
 int Logger::count = 0;
 std::map<int, Logger &> Logger::loggers = {};
 std::size_t Logger::defaultLogBufferSize = 50;
@@ -17,19 +23,19 @@ std::time_t Logger::currentTime_ = std::time(nullptr);
 //      << message << std::endl;
 //}
 
-void Logger::bufferedLog(std::string message, LogLevel level) {
+void Logger::bufferedLog(LogLevel::VALUES level, std::string &message) {
 
 }
 
-void Logger::flushInRange(LogLevel infimum, LogLevel supremum) {
+void Logger::flushInRange(LogLevel::VALUES infimum, LogLevel::VALUES supremum) {
 
 }
 
-void Logger::flushAbove(LogLevel infimum) {
+void Logger::flushAbove(LogLevel::VALUES infimum) {
 
 }
 
-void Logger::flushBelow(LogLevel supremum) {
+void Logger::flushBelow(LogLevel::VALUES supremum) {
 
 }
 
@@ -63,10 +69,24 @@ std::time_t Logger::getCurrentTime() {
   return currentTime_;
 }
 
-std::string Logger::additionalInfo() {
+std::string Logger::additionalInfo(LogLevel::VALUES level) {
+  /**
+   * The opening part.
+   */
+  std::stringstream sstream;
+  sstream << "[Logger id: " << id
+      << ", " << LogLevel::toString(level);
+  /**
+   * Insert time.
+   */
   getCurrentTime();
   std::string str(std::asctime(std::localtime(&currentTime_)));
   assert(str.size() > 0);
   str.pop_back();
-  return str;
+  sstream << ", " << str << "]: ";
+  /**
+   * The closing part.
+   */
+  sstream << "]: ";
+  return sstream.str();
 }

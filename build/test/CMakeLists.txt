@@ -1,8 +1,17 @@
 add_executable(BufferTest
-        ../../src/test/BufferTest.cpp)
+        ../../src/test/BufferTest.cpp
+        )
 target_include_directories(BufferTest PUBLIC
         ../../src/main/)
 target_link_libraries(BufferTest
+        Logger)
+
+add_executable(LoggerTest
+        ../../src/test/LoggerTest.cpp
+        )
+target_include_directories(LoggerTest PUBLIC
+        ../../src/main/)
+target_link_libraries(LoggerTest
         Logger)
 
 add_executable(ScreenTest
