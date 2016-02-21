@@ -116,6 +116,14 @@ class Logger {
         << std::endl;
   }
 
+  template<class ...Types>
+  void delayedMultiLog(LogLevel::VALUES level,Types&& ...messages) {
+    logBufferStream_
+        << additionalInfo(level)
+        << buildLogMessage(messages...)
+        << std::endl;
+  }
+
 
   template<class T>
   void delayedLog(T &&message, LogLevel::VALUES level = LogLevel::VALUES::INFO) {

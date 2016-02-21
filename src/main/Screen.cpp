@@ -132,10 +132,19 @@ void Screen::run() {
     do {
       getmaxyx(stdscr, t_height, t_width_);
       if (t_height != height || t_width_ != width) {
-        logger->delayedLog("Terminal resized!");
-        resize_term(t_width_, t_height);
+        height = t_height;
+        width = t_width_;
+        logger->delayedMultiLog(LogLevel::VALUES::DEBUG,
+                                "Terminal resized! [",
+                                t_width_,
+                                ", ",
+                               t_height, "]");
+        buffer->rescale({width, height});
+        buffer->fill('#');
+        resize_term(t_height, t_width_);
+        reRender();
       }
-    } while (this->ifContinue_());
+    } while (on);
   });
 
   std::thread keyThread([&] {
@@ -151,7 +160,7 @@ void Screen::run() {
 //        break;
 //      }
 
-    } while (this->ifContinue_());
+    } while (on);
 
   });
 

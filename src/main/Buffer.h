@@ -35,6 +35,8 @@ class BufferBase {
   T *memory_;
   bool selfOwned;
   static T zeroTemplate;
+ public:
+  virtual ~BufferBase() {};
 };
 
 template<class T>
@@ -92,7 +94,15 @@ class Buffer: public BufferBase<T> {
 
   ~Buffer() {
     if (this->selfOwned) {
-//      delete memory_;
+      /**
+       * TODO: write a move and a copy constructor to make this work.
+       */
+//      auto size = getTotalSize();
+//      auto pointer = this->memory_;
+//      for(auto i = 0; i < size; ++i) {
+//        (pointer + i)->~T();
+//      }
+//      delete[] this->memory_;
     }
   };
 
