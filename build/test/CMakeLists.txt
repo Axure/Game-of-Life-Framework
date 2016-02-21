@@ -29,3 +29,13 @@ target_include_directories(TimerTest PUBLIC
         ../../src/main/)
 target_link_libraries(TimerTest
         Timer)
+
+add_executable(GameTest
+        ../../src/test/GameTest.cpp)
+target_include_directories(GameTest PUBLIC
+        ../../src/main/)
+target_link_libraries(GameTest
+        Screen
+        Timer
+        Logger
+        )

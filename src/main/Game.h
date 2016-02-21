@@ -8,10 +8,18 @@
 #include <vector>
 #include "Screen.h"
 
-enum STATE {
+enum class STATE {
   ALIVE, DEAD
 };
 
+/**
+ * TODO: infinite scrolling and moving? Infinite canvas?
+ * TODO: Just like "Passengers" the game?
+ *
+ * @class Game
+ *
+ * The class representing a game.
+ */
 class Game {
  public:
   Game(std::size_t width = 8,
@@ -27,6 +35,7 @@ class Game {
   std::size_t width, height;
   double frequency;
   Buffer<STATE, 2> board;
+  static Buffer<STATE, 2> defaultBoard;
   Buffer<int, 2> neighborCount;
   void initNeighborCount();
 };

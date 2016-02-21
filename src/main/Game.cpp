@@ -4,9 +4,13 @@
 
 #include "Game.h"
 
+Buffer<STATE, 2> defaultBoard =
+    BufferFactory::createBuffer<STATE, 10, 10>({
+                                                  {}
+                                              });
 
 void Game::start() {
-  auto a = {{ALIVE, DEAD}};
+  auto a = {{STATE::ALIVE, STATE::DEAD}};
   a;
 
 }
