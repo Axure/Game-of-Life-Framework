@@ -29,13 +29,13 @@ void Screen::fitSize() {
   if (width > oldHeight || height > oldHeight) {
 //    getmaxyx();
     buffer->rescale({width, height});
-    logger->logf(LogLevel::VALUES::INFO,
-                 "Rescaled with {%d, %d}!", width, height);
+//    logger->logf(LogLevel::VALUES::INFO,
+//                 "Rescaled with \{%d, %d\}!", width, height);
     std::stringstream sMessage;
-    sMessage << "Rescaled with"
+    sMessage << "Rescaled with {"
         << width << ", " << height
-        << ".";
-    logger->delayedLog(sMessage.str());
+        << "}.";
+    logger->delayedLog(sMessage.str(), LogLevel::VALUES::INFO);
     oldHeight = height;
     oldWidth = width;
   }
@@ -112,7 +112,7 @@ Screen::~Screen() {
 
 void Screen::fill(char charToFill) {
 //  std::cout << ("Filling with ") << charToFill << std::endl;
-  this->buffer->fill(charToFill);
+  this->buffer->fill(charToFill); // TODO: should `fill` be set as a state? Or just consisting of the various sub-states?
 }
 
 void Screen::run() {
@@ -123,6 +123,20 @@ void Screen::run() {
   int c;
 //  detach();
   auto logger = LoggerFactory::getSingletonLogger();
+
+  std::thread resizeThread([&] {
+    int t_width_, t_height;
+    assert(true);
+    logger->bufferedLog("Resizing thread started!");
+    AXUREZ_LOGGER_DEBUG(logger, "Resizing thread started!");
+    do {
+      getmaxyx(stdscr, t_height, t_width_);
+      if (t_height != height || t_width_ != width) {
+        logger->bufferedLog("Terminal resized!");
+        resize_term(t_width_, t_height);
+      }
+    } while (this->ifContinue_());
+  });
 
   std::thread keyThread([&] {
     do {
@@ -152,5 +166,6 @@ void Screen::run() {
 
   keyThread.join();
   renderThread.join();
+  resizeThread.join();
 
 }
