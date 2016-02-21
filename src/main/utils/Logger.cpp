@@ -83,7 +83,7 @@ std::string Logger::additionalInfo(LogLevel::VALUES level) {
   std::string str(std::asctime(std::localtime(&currentTime_)));
   assert(str.size() > 0);
   str.pop_back();
-  sstream << ", " << str << "]: ";
+  sstream << ", " << str;
   /**
    * The closing part.
    */

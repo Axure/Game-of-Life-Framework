@@ -128,15 +128,17 @@ class Logger {
   template<unsigned int length, class ...Types>
   void logf(LogLevel::VALUES level,
             const char (&format)[length], Types &&...args) {
-    printf("%s ", additionalInfo(level));
+    printf("%s", additionalInfo(level).c_str());
     printf(format, args...); // TODO: Concatenate these two sentences to ensure atomicity.
+    printf("\n");
   };
 
   template<unsigned int length, class ...Types>
   void delayedLogf(LogLevel::VALUES level,
             const char (&format)[length], Types &&...args) {
-    printf("%s ", additionalInfo(level));
+    printf("%s ", additionalInfo(level).c_str());
     printf(format, args...); // TODO: Concatenate these two sentences to ensure atomicity.
+    printf("\n");
   };
 
   void flushInRange(LogLevel::VALUES infimum, LogLevel::VALUES supremum);
