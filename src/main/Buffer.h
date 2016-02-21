@@ -34,13 +34,13 @@ class BufferBase {
  protected:
   T *memory_;
   bool selfOwned;
-  static T zeroTemplate;
+//  static T zeroTemplate;
  public:
-  virtual ~BufferBase() {};
+  virtual ~BufferBase() { };
 };
 
-template<class T>
-T BufferBase<T>::zeroTemplate = T();
+//template<class T>
+//T BufferBase<T>::zeroTemplate = T();
 
 template<class T, size_t_ dimension>
 class Buffer: public BufferBase<T> {
@@ -55,6 +55,28 @@ class Buffer: public BufferBase<T> {
 //    this->fromInitializerList(multiList);
 //    initMemory();
 //  }
+
+  Buffer(Buffer &buffer) {
+    this->selfOwned = buffer.selfOwned;
+    this->sizes_ = buffer.sizes_;
+    if (this->selfOwned) {
+      auto totalSize = getTotalSize();
+      this->memory_ = reinterpret_cast<T *>(malloc(totalSize * sizeof(T)));
+      for (int i = 0; i < totalSize; ++i) {
+        new(this->memory_ + i) T(*(buffer.memory_ + i));
+      }
+    } else {
+      this->memory_ = buffer.memory_;
+    }
+  }
+
+  Buffer(Buffer &&buffer) {
+    this->selfOwned = buffer.selfOwned;
+    this->memory_ = buffer.memory_;
+    this->sizes_ = buffer.sizes_;
+    buffer.memory_ = nullptr;
+    buffer.selfOwned = false;
+  }
 
   Buffer(SizeArrayType &&sizes) {
 //    static_assert(sizeof...(Types) == dimension, "Buffer initialized with in compatible number of sizes!");
@@ -97,12 +119,12 @@ class Buffer: public BufferBase<T> {
       /**
        * TODO: write a move and a copy constructor to make this work.
        */
-//      auto size = getTotalSize();
-//      auto pointer = this->memory_;
-//      for(auto i = 0; i < size; ++i) {
-//        (pointer + i)->~T();
-//      }
-//      delete[] this->memory_;
+      auto size = getTotalSize();
+      auto pointer = this->memory_;
+      for(auto i = 0; i < size; ++i) {
+        (pointer + i)->~T();
+      }
+      delete[] this->memory_;
     }
   };
 
@@ -266,6 +288,22 @@ class Buffer<T, 0>: public BufferBase<T> {
   Buffer(const Buffer<T, 1> &parent, int index) {
     this->memory_ = parent.getMemory() + index;
     this->selfOwned = false;
+  }
+
+  Buffer(Buffer &buffer) {
+    this->selfOwned = buffer.selfOwned;
+    if (this->selfOwned) {
+      this->memory_ = new T(*(buffer.memory_));
+    } else {
+      this->memory_ = buffer.memory_;
+    }
+  }
+
+  Buffer(Buffer &&buffer) {
+    this->selfOwned = buffer.selfOwned;
+    this->memory_ = buffer.memory_;
+    buffer.memory_ = nullptr;
+    buffer.selfOwned = false;
   }
 
   T operator[](size_t_ index) = delete;
