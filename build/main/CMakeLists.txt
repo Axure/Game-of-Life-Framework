@@ -25,7 +25,7 @@ add_library(Logger
         ../../src/main/utils/Logger.cpp
         ../../src/main/utils/Logger.h
         ../../src/main/utils/LoggerFactory.cpp
-        ../../src/main/utils/LoggerFactory.h)
+        ../../src/main/utils/LoggerFactory.h ../../src/main/JoinedHeap.hpp)
 
 add_library(Timer
         ../../src/main/utils/Timer.cpp
