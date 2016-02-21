@@ -6,6 +6,7 @@
 #define GAMEOFLIF_BUFFER_H
 
 #include <array>
+#include <cassert>
 #include <memory>
 #include <numeric>
 #include <cstdlib>
@@ -104,6 +105,9 @@ class Buffer: public BufferBase<T> {
      * Set the pointer.
      */
     return std::forward<Buffer<T, dimension - 1>>(Buffer<T, dimension - 1>(*this, index));
+//    Buffer<T, 0> result;
+//    result.selfOwned = false;
+//    result.memory_ = this->getMemory() + index;
   }
 
   void initMemory() {
@@ -154,6 +158,7 @@ class Buffer: public BufferBase<T> {
     static_assert(sizeof...(RestInt) == dimension - 1,
                   "The number of indices provided is incorrect!");
     static_assert(std::is_convertible<FirstInt, size_t_>::value, "?");
+    assert(this->sizes_[0] > firstIndex);
     return this->operator[](static_cast<size_t_ >(firstIndex))
 //        .get<RestInt...>(restIndex...);
         .get(restIndex...);
@@ -173,6 +178,7 @@ class Buffer: public BufferBase<T> {
     static_assert(sizeof...(RestInt) == dimension - 1,
                   "The number of indices provided is incorrect!");
     static_assert(std::is_convertible<FirstInt, size_t_>::value, "?");
+    assert(this->sizes_[0] > firstIndex);
     this->operator[](static_cast<size_t_ >(firstIndex))
 //        .get<RestInt...>(restIndex...);
         .set(value, restIndex...);
@@ -241,6 +247,12 @@ class Buffer<T, 0>: public BufferBase<T> {
 
   }
 
+//  template<typename ...Types>
+//  Buffer(Types &&...args) :
+//      T(std::forward<Types>(args)...) {
+//
+//  }
+
   Buffer(const Buffer<T, 1> &parent, int index) {
     this->memory_ = parent.getMemory() + index;
     this->selfOwned = false;
@@ -263,7 +275,7 @@ class Buffer<T, 0>: public BufferBase<T> {
     return *(this->memory_);
   }
 
-  T get() {
+  T get() noexcept {
     return *(this->memory_);
   }
 
@@ -271,7 +283,7 @@ class Buffer<T, 0>: public BufferBase<T> {
     *(this->memory_) = value_;
   }
 
-  ~Buffer() {
+  ~Buffer() noexcept {
     if (this->selfOwned) {
       this->memory_->~T();
       delete (this->memory_);

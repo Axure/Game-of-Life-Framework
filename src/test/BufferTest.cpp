@@ -76,10 +76,11 @@ int main() {
   logger->log(bufferm7[1][0].get());
   logger->log(bufferm7[1][1].get());
   bufferm7.fill('1');
-  logger->log(bufferm7[0][0].get());
-  logger->log(bufferm7[0][1].get());
-  logger->log(bufferm7[1][0].get());
-  logger->log(bufferm7[1][1].get());
+  logger->log(bufferm7.get(0, 0));
+  logger->log(bufferm7.get(0, 1));
+  logger->log(bufferm7.get(1, 0));
+  logger->log(bufferm7.get(1, 1));
+//  bufferm7.set('3', 3, 3); // Would cause assertion failure.
 
   return 0;
 }
