@@ -416,15 +416,23 @@ class Buffer: public BufferBase<T> {
 template<class T>
 class Buffer<T, 0>: public BufferBase<T> {
  public:
-  Buffer() : T() {
-
-  }
+  Buffer() = delete;
 
 //  template<typename ...Types>
 //  Buffer(Types &&...args) :
 //      T(std::forward<Types>(args)...) {
 //
 //  }
+
+  Buffer(T &value) {
+    this->selfOwned = true;
+    this->memory_ = new T(value);
+  }
+
+  Buffer(T &&value) {
+    this->selfOwned = true;
+    this->memory_ = new T(value);
+  }
 
   Buffer(const Buffer<T, 1> &parent, int index) {
     this->memory_ = parent.getMemory() + index;

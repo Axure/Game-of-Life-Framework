@@ -23,6 +23,15 @@ target_link_libraries(ScreenTest
         Logger
         Timer)
 
+add_executable(ScreenResizeTest
+        ../../src/test/Engine/ScreenResizeTest.cpp)
+target_include_directories(ScreenResizeTest PUBLIC
+        ../../src/main/)
+target_link_libraries(ScreenResizeTest
+        Curses
+        Logger
+        Timer)
+
 add_executable(TimerTest
         ../../src/test/TimerTest.cpp)
 target_include_directories(TimerTest PUBLIC

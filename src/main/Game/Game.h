@@ -43,6 +43,13 @@ class Game {
  public:
   void setCurses(std::shared_ptr<Curses> pCurses) {
     this->pCurses_ = pCurses;
+    /**
+     *
+     */
+    pCurses_->attach([&] {
+      pDelayer_->delay();
+      return true;
+    });
   }
 
  protected:

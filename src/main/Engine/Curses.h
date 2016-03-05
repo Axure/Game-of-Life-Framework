@@ -40,8 +40,8 @@ class Curses {
  private:
   LengthType offsetW, offsetH;
  public:
-  AX_BIND_VARIABLE(offsetW, offsetX);
-  AX_BIND_VARIABLE(offsetH, offsetY);
+//  AX_BIND_VARIABLE(offsetW, offsetX);
+//  AX_BIND_VARIABLE(offsetH, offsetY);
   /**
    * The constructor.
    */

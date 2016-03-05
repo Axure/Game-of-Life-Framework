@@ -44,7 +44,7 @@ Logger::Logger() : logBufferSize(defaultLogBufferSize) {
   while (Logger::loggers.find(id) != Logger::loggers.end()) {
     id += 1;
   }
-  std::cout << id << std::endl;
+  std::cout << "Logger with id " <<id << " created!" << std::endl;
   Logger::loggers.insert(
       std::pair<int, Logger &>(id, *this));
 //  Logger::loggers[id] = *this;
