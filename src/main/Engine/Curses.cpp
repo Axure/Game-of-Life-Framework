@@ -2,7 +2,7 @@
 // Created by 郑虎 on 2016-02-06.
 //
 
-#include "Screen.h"
+#include "Curses.h"
 #ifdef WIN32
 #include <windows.h>
 #else
@@ -11,11 +11,15 @@
 #endif
 #include <iostream>
 #include <thread>
-#include "utils/LoggerFactory.h"
+#include "../utils/LoggerFactory.h"
 
 using std::size_t;
 
-Screen::Screen() : on(false) {
+/**
+ * Initialize the screen.
+ * Set state `on` to false.
+ */
+Curses::Curses() : on(false) {
   std::array<size_t, 2> sizes({{maxWidth, maxHeight}});
   oldWidth = maxWidth;
   oldHeight = maxHeight;
@@ -23,9 +27,12 @@ Screen::Screen() : on(false) {
       std::move(sizes));
 }
 
-void Screen::fitSize() {
+/**
+ * Fit the size of the screen to that of the surrounding terminal.
+ */
+void Curses::fitSize() {
   auto logger = LoggerFactory::getSingletonLogger();
-  std::tie(width, height) = Screen::getTerminalSize();
+  std::tie(width, height) = Curses::getTerminalSize();
   if (width > oldHeight || height > oldHeight) {
 //    getmaxyx();
     buffer->rescale({width, height});
@@ -41,7 +48,10 @@ void Screen::fitSize() {
   }
 }
 
-void Screen::attach(std::function<bool()> ifContinue) {
+/**
+ *
+ */
+void Curses::attach(std::function<bool()> ifContinue) {
   initscr();
   this->on = true;
   this->ifContinue_ = ifContinue;
@@ -50,7 +60,10 @@ void Screen::attach(std::function<bool()> ifContinue) {
 
 }
 
-void Screen::reRender() {
+/**
+ *
+ */
+void Curses::refresh() {
 //  for
   clear();
   for (int i = 0; i < width; ++i) {
@@ -61,41 +74,36 @@ void Screen::reRender() {
   refresh();
 }
 
-void Screen::detach() {
+/**
+ *
+ */
+void Curses::detach() {
   stop();
   endwin();
 }
 
-void Screen::stop() {
+/**
+ *
+ */
+void Curses::stop() {
   this->ifContinue_ = [] { return false; };
   this->on = false;
-
-//  pRenderingThread_->stop;
-//  delete pRenderingThread_;
 }
 
+/**
+ * @deprecated
+ */
 template<unsigned int length, class ...Types>
-void Screen::printAt(size_t x, size_t y, const char (&format)[length], Types...content) {
+void Curses::printAt(size_t x, size_t y, const char (&format)[length], Types...content) {
   move(x, y);
   printw(format, content...);
 }
 
-std::tuple<int, int> Screen::getTerminalSize() {
+/**
+ * Get the size of the terminal using the ncurses API.
+ */
+std::tuple<int, int> Curses::getTerminalSize() {
 
-//#ifdef WIN32
-//  CONSOLE_SCREEN_BUFFER_INFO csbi;
-//  int ret;
-//  ret = GetConsoleScreenBufferInfo(GetStdHandle( STD_OUTPUT_HANDLE ),&csbi);
-//  if(ret)
-//  {
-//      printf("Console Buffer Width: %d\n", csbi.dwSize.X);
-//      printf("Console Buffer Height: %d\n", csbi.dwSize.Y);
-//  }
-//#else
-//  static struct winsize w;
-//  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-//  return std::make_tuple(std::move(w.ws_col), std::move(w.ws_row));
-//#endif
   int x, y;
   getmaxyx(stdscr, y, x);
   if (y < 0 || x < 0) {
@@ -107,22 +115,34 @@ std::tuple<int, int> Screen::getTerminalSize() {
   return std::make_tuple(std::move(x), std::move(y));
 }
 
+/**
+ * @deprecated
+ */
 template<unsigned int length, class ...Types>
-void Screen::print(const char (&format)[length], Types &&...args) {
+void Curses::print(const char (&format)[length], Types &&...args) {
   printw(format, std::forward<Types>(args)...);
   refresh();
 };
 
-Screen::~Screen() {
+/**
+ *
+ */
+Curses::~Curses() {
 
 }
 
-void Screen::fill(char charToFill) {
+/**
+ *
+ */
+void Curses::fillWithChar(char charToFill) {
 //  std::cout << ("Filling with ") << charToFill << std::endl;
   this->buffer->fill(charToFill); // TODO: should `fill` be set as a state? Or just consisting of the various sub-states?
 }
 
-void Screen::run() {
+/**
+ *
+ */
+void Curses::run() {
 /**
    * Note that the first screen must be rendered.
    * The `ifContinue` function is only evaluated after it has beeen rendered once.
@@ -137,19 +157,21 @@ void Screen::run() {
     logger->delayedLog("Resizing thread started!");
     AXUREZ_LOGGER_DEBUG(logger, "Resizing thread started!");
     do {
-      getmaxyx(stdscr, t_height, t_width_);
-      if (t_height != height || t_width_ != width) {
-        height = t_height;
-        width = t_width_;
-        logger->delayedMultiLog(LogLevel::VALUES::DEBUG,
-                                "Terminal resized! [",
-                                t_width_,
-                                ", ",
-                                t_height, "]");
-        buffer->rescale({width, height});
-        buffer->fill('#');
-        resize_term(t_height, t_width_);
-        reRender();
+      if (this->autoResize_) {
+        getmaxyx(stdscr, t_height, t_width_);
+        if (t_height != height || t_width_ != width) {
+          height = t_height;
+          width = t_width_;
+          logger->delayedMultiLog(LogLevel::VALUES::DEBUG,
+                                  "Terminal resized! [",
+                                  t_width_,
+                                  ", ",
+                                  t_height, "]");
+          buffer->rescale({width, height});
+          resize_term(t_height, t_width_);
+        }
+        buffer->fill('#'); // TODO: only for testing.
+        refresh();
       }
       /**
        * For immediate response to the resizing,
@@ -182,7 +204,7 @@ void Screen::run() {
   pRenderingThread_ = std::make_shared<std::thread>([&] {
     do {
       if (this->on) {
-        reRender();
+        refresh();
       }
 //      std::cout << 1 << std::endl;
     } while (this->ifContinue_());
@@ -192,4 +214,15 @@ void Screen::run() {
   pRenderingThread_->join();
   resizeThread.join();
 
+}
+
+/**
+ * @method
+ * Try to put a character at the given position.
+ * It will check if the position is valid.
+ * If not, false will be returned. No exception. No interruption.
+ * If the position is valid, true will be returned.
+ */
+bool Curses::putCharAt(size_t x, size_t y, char c) noexcept {
+  return buffer->headlessSet(c, x, y);
 }

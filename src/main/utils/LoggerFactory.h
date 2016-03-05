@@ -7,6 +7,9 @@
 #include "Logger.h"
 #include <memory>
 
+/**
+ * @class LoggerFactory
+ */
 class LoggerFactory {
  public:
   static std::shared_ptr<Logger>  getSingletonLogger();

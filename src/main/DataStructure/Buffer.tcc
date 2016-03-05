@@ -11,15 +11,18 @@
 #include <numeric>
 #include <cstdlib>
 #include <type_traits>
-#include "utils/LoggerFactory.h"
+#include "../utils/LoggerFactory.h"
 
 using std::begin;
 using std::end;
-using size_t_ = std::size_t;
+using SizeType = std::size_t;
 
-//constexpr size_t_ operator "" _sz(unsigned long long n) { return n; }
+constexpr SizeType operator
+""
 
-template<class T, size_t_ dimension>
+_sz(unsigned long long n) { return n; }
+
+template<class T, SizeType dimension>
 struct MultiInitializerList {
   using type = std::initializer_list<typename MultiInitializerList<T, dimension - 1>::type>;
 };
@@ -42,11 +45,23 @@ class BufferBase {
 //template<class T>
 //T BufferBase<T>::zeroTemplate = T();
 
-template<class T, size_t_ dimension>
+//template<class T>
+//class DataStructure {
+// public:
+//  template<class U>
+//  virtual DataStructure<U> map(const DataStructure &dataStructure,
+//                               std::function<U(T)> function) = 0;
+//};
+
+/**
+ * TODO: how to iterate through the buffer?
+ * TODO: indefinitely nested loop in C++.
+ */
+template<class T, SizeType dimension>
 class Buffer: public BufferBase<T> {
  public:
 
-  using SizeArrayType = std::array<size_t_, dimension>;
+  using SizeArrayType = std::array<SizeType, dimension>;
 
   Buffer() = delete;
 
@@ -56,6 +71,9 @@ class Buffer: public BufferBase<T> {
 //    initMemory();
 //  }
 
+  /**
+   * The copy constructor
+   */
   Buffer(Buffer &buffer) {
     this->selfOwned = buffer.selfOwned;
     this->sizes_ = buffer.sizes_;
@@ -70,6 +88,9 @@ class Buffer: public BufferBase<T> {
     }
   }
 
+  /**
+   * The move constructor
+   */
   Buffer(Buffer &&buffer) {
     this->selfOwned = buffer.selfOwned;
     this->memory_ = buffer.memory_;
@@ -78,11 +99,31 @@ class Buffer: public BufferBase<T> {
     buffer.selfOwned = false;
   }
 
-  Buffer(SizeArrayType &&sizes) {
-//    static_assert(sizeof...(Types) == dimension, "Buffer initialized with in compatible number of sizes!");
+  /**
+   *
+   */
+  Buffer(SizeArrayType &&sizes) :
+      sizes_(sizes) {
     this->sizes_ = std::forward<SizeArrayType>(sizes);
     initMemory();
   }
+
+  /**
+   *
+   */
+  Buffer(const SizeType *sizes) :
+      sizes_({{sizes}}) {
+    initMemory();
+  }
+
+  /**
+   * TODO: figure out why this constructor does not work.
+   */
+//  Buffer(const size_t_ *sizes, T value):
+//      sizes_({{sizes}}){
+//    initMemory();
+//    this->fill(value);
+//  }
 
 //  template<int ...sizes>
 //  Buffer(const typename MultiInitializerList<T, sizeof...(sizes)>::type &multiList):
@@ -94,7 +135,10 @@ class Buffer: public BufferBase<T> {
 //    this->fromInitializerList(multiList);
 //  };
 
-  Buffer(Buffer<T, dimension + 1> &parentBuffer, size_t_ index) {
+  /**
+   *
+   */
+  Buffer(Buffer<T, dimension + 1> &parentBuffer, SizeType index) {
     /**
      * Reassign the size.
      */
@@ -114,46 +158,53 @@ class Buffer: public BufferBase<T> {
     this->selfOwned = false;
   }
 
+  /**
+   * The destructor of the multi-dimensional buffer class.
+   * If the buffer owns itself, we iterate over it and destroy all objects it points to.
+   * If the buffer does not own itself, we simply do nothing.
+   */
   ~Buffer() {
     if (this->selfOwned) {
-      /**
-       * TODO: write a move and a copy constructor to make this work.
-       */
       auto size = getTotalSize();
       auto pointer = this->memory_;
-      for(auto i = 0; i < size; ++i) {
+      for (auto i = 0; i < size; ++i) {
         (pointer + i)->~T();
       }
       delete[] this->memory_;
     }
   };
 
-  Buffer<T, dimension - 1> operator[](size_t_ index) {
+  /**
+   * The subscript operator for the multi-dimensional buffer class.
+   */
+  Buffer<T, dimension - 1> operator[](SizeType index) {
     /**
-     * Reassign the size.
-     */
-
-    /**
-     * Set the pointer.
+     * Simply call the constructor from a higher dimensional buffer of the buffer of lower dimension.
      */
     return std::forward<Buffer<T, dimension - 1>>(Buffer<T, dimension - 1>(*this, index));
-//    Buffer<T, 0> result;
-//    result.selfOwned = false;
-//    result.memory_ = this->getMemory() + index;
   }
 
+  /**
+   * Initialize the memory with the default constructor of the class T.
+   */
   void initMemory() {
     this->memory_ = new T[getTotalSize()]();
     this->selfOwned = true;
   }
 
-  size_t_ getTotalSize() {
+  /**
+   * Get the total size of the buffer.
+   */
+  SizeType getTotalSize() {
     return Buffer::totalSize_(sizes_);
   }
 
-  Buffer fromInitializerList(const typename MultiInitializerList<T, dimension>::type &multiList) {
+  /**
+   * Initialize the buffer from an initializer list.
+   */
+  Buffer &fromInitializerList(const typename MultiInitializerList<T, dimension>::type &multiList) {
     auto iterator = multiList.begin();
-    for (size_t_ i = 0; i < sizes_[0]; ++i) {
+    for (SizeType i = 0; i < sizes_[0]; ++i) {
       if (iterator != multiList.end()) {
         this->operator[](i).fromInitializerList(*iterator);
         iterator++;
@@ -166,7 +217,7 @@ class Buffer: public BufferBase<T> {
   }
 
   void fromDefaultConstructor() {
-    for (size_t_ i = 0; i < sizes_[0]; ++i) {
+    for (SizeType i = 0; i < sizes_[0]; ++i) {
       this->operator[](i).fromDefaultConstructor();
     }
   }
@@ -185,13 +236,17 @@ class Buffer: public BufferBase<T> {
 //    return this->operator[](firstIndex).get<restIndexes...>();
 //  }
 
+  /**
+   *
+   */
   template<typename FirstInt, typename ...RestInt>
-  inline T get(FirstInt firstIndex, RestInt ...restIndex) {
+  inline T &get(FirstInt firstIndex, RestInt ...restIndex) {
     static_assert(sizeof...(RestInt) == dimension - 1,
                   "The number of indices provided is incorrect!");
-    static_assert(std::is_convertible<FirstInt, size_t_>::value, "?");
+    static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
     assert(this->sizes_[0] > firstIndex);
-    return this->operator[](static_cast<size_t_ >(firstIndex))
+    assert(firstIndex >= 0);
+    return this->operator[](static_cast<SizeType >(firstIndex))
 //        .get<RestInt...>(restIndex...);
         .get(restIndex...);
   }
@@ -206,15 +261,78 @@ class Buffer: public BufferBase<T> {
    *
    */
   template<typename FirstInt, typename ...RestInt>
-  inline Buffer &set(T value, FirstInt firstIndex, RestInt ...restIndex) {
+  inline Buffer &set(T &value, FirstInt firstIndex, RestInt ...restIndex) {
     static_assert(sizeof...(RestInt) == dimension - 1,
                   "The number of indices provided is incorrect!");
-    static_assert(std::is_convertible<FirstInt, size_t_>::value, "?");
+    static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
     assert(this->sizes_[0] > firstIndex);
-    this->operator[](static_cast<size_t_ >(firstIndex))
+    assert(firstIndex >= 0);
+    this->operator[](static_cast<SizeType >(firstIndex))
 //        .get<RestInt...>(restIndex...);
         .set(value, restIndex...);
     return *this;
+  }
+
+    template<typename FirstInt, typename ...RestInt>
+  inline Buffer &set(T &&value, FirstInt firstIndex, RestInt ...restIndex) {
+    static_assert(sizeof...(RestInt) == dimension - 1,
+                  "The number of indices provided is incorrect!");
+    static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
+    assert(this->sizes_[0] > firstIndex);
+    assert(firstIndex >= 0);
+    this->operator[](static_cast<SizeType >(firstIndex))
+//        .get<RestInt...>(restIndex...);
+        .set(value, restIndex...);
+    return *this;
+  }
+
+  /**
+   * Headless set the value, whether the position is valid or not.
+   * Returns true if the position is valid, false otherwise.
+   */
+  template<typename FirstInt, typename ...RestInt>
+  inline bool headlessSet(T &value, FirstInt firstIndex, RestInt ...restIndex) {
+    static_assert(sizeof...(RestInt) == dimension - 1,
+                  "The number of indices provided is incorrect!");
+    static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
+    if (this->sizes_[0] > firstIndex || firstIndex < 0) {
+      return 0;
+    } else {
+      return this->operator[](static_cast<SizeType >(firstIndex))
+          .headlessSet((value), restIndex...);
+    }
+  }
+
+  /**
+   */
+  template<typename FirstInt, typename ...RestInt>
+  inline bool headlessSet(T &&value, FirstInt firstIndex, RestInt ...restIndex) {
+    static_assert(sizeof...(RestInt) == dimension - 1,
+                  "The number of indices provided is incorrect!");
+    static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
+    if (this->sizes_[0] > firstIndex || firstIndex < 0) {
+      return 0;
+    } else {
+      return this->operator[](static_cast<SizeType >(firstIndex))
+          .headlessSet(std::move(value), restIndex...);
+    }
+  }
+
+  /**
+   * Headless transform the value, whether the position is vlaid or not.
+   * Returns true if the position is valid, false otherwise.
+   */
+  template<typename FirstInt, typename ...RestInt>
+  inline bool headlessTransform(std::function<T(T)> &&function, FirstInt firstIndex, RestInt ...restIndex) {
+    static_assert(sizeof...(RestInt) == dimension - 1,
+                  "The number of indices provided is incorrect!");
+    static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
+    if (this->sizes_[0] > firstIndex || firstIndex < 0) {
+      return false;
+    } else {
+      return this->operator[](static_cast<SizeType >(firstIndex))
+          .headlessTransform(std::forward<std::function<T(T)>>(function), restIndex...);
+    }
   }
 
 //  template<size_t_ firstIndex, size_t_ ...restIndexes>
@@ -228,6 +346,9 @@ class Buffer: public BufferBase<T> {
 //    static_assert(sizeof...(restIndexes) == dimension - 1, "?");
 //  }
 
+  /**
+   *
+   */
   void fill(T &&value) {
     auto totalSize = getTotalSize();
     for (int i = 0; i < totalSize; ++i) {
@@ -235,6 +356,9 @@ class Buffer: public BufferBase<T> {
     }
   }
 
+  /**
+   *
+   */
   void fill(T &value) {
     auto totalSize = getTotalSize();
     for (int i = 0; i < totalSize; ++i) {
@@ -242,6 +366,9 @@ class Buffer: public BufferBase<T> {
     }
   }
 
+  /**
+   *
+   */
   void rescale(SizeArrayType &&newSizes) {
     auto newTotalSize = Buffer::totalSize_(newSizes);
     // TODO: consider thread safety here...
@@ -254,18 +381,32 @@ class Buffer: public BufferBase<T> {
     this->sizes_ = newSizes;
   }
 
+  /**
+   *
+   */
   void rescale(
-      typename MultiInitializerList<size_t_, dimension>::type &&newSizes) {
+      typename MultiInitializerList<SizeType, dimension>::type &&newSizes) {
     rescale(SizeArrayType(newSizes));
   }
 
- private:
-  std::array<size_t_, dimension> sizes_;
+  /**
+   *
+   */
+  template<class U>
+  Buffer<U, dimension> map(std::function<U(T)> function) {
 
-  static size_t_ totalSize_(SizeArrayType sizeArray) {
+  };
+
+ private:
+  std::array<SizeType, dimension> sizes_;
+
+  /**
+   *
+   */
+  static SizeType totalSize_(SizeArrayType sizeArray) {
     return std::accumulate(begin(sizeArray), end(sizeArray),
                            static_cast<size_t >(1),
-                           [](size_t_ c, size_t_ p) -> size_t {
+                           [](SizeType c, SizeType p) -> size_t {
                              return c * p;
                            });
   };
@@ -290,6 +431,9 @@ class Buffer<T, 0>: public BufferBase<T> {
     this->selfOwned = false;
   }
 
+  /**
+   * The copy constructor.
+   */
   Buffer(Buffer &buffer) {
     this->selfOwned = buffer.selfOwned;
     if (this->selfOwned) {
@@ -299,6 +443,9 @@ class Buffer<T, 0>: public BufferBase<T> {
     }
   }
 
+  /**
+   * The move constrtuctor.
+   */
   Buffer(Buffer &&buffer) {
     this->selfOwned = buffer.selfOwned;
     this->memory_ = buffer.memory_;
@@ -306,12 +453,21 @@ class Buffer<T, 0>: public BufferBase<T> {
     buffer.selfOwned = false;
   }
 
-  T operator[](size_t_ index) = delete;
+  /**
+   * Delete the subscript operator.
+   */
+  T operator[](SizeType index) = delete;
 
+  /**
+   * Initialize the element from a 0-dimensional multi-initializer list, i.e. a single variable of type T.
+   */
   void fromInitializerList(const typename MultiInitializerList<T, 0>::type &multiList) {
     *(this->memory_) = multiList;
   }
 
+  /**
+   * Initialize the element from the default constructor of T.
+   */
   void fromDefaultConstructor() {
     new(this->memory_) T();
 //    std::copy(&BufferBase<T>::zeroTemplate,
@@ -319,16 +475,42 @@ class Buffer<T, 0>: public BufferBase<T> {
 //              this->memory_);
   }
 
-  T operator()() {
+  /**
+   * Overload the bracket operator for getter of the value.
+   */
+  T &operator()() {
     return *(this->memory_);
   }
 
-  T get() noexcept {
+  /**
+   * @return The value stored in the memory.
+   */
+  T &get() noexcept {
     return *(this->memory_);
   }
 
   void set(const T &value_) {
-    *(this->memory_) = value_;
+    new(this->memory_) T(value_);
+  }
+
+  void set(const T &&value_) {
+    new(this->memory_) T(value_);
+  }
+
+  bool headlessSet(T &value) {
+    this->set(value);
+    return true;
+  }
+
+  bool headlessSet(T &&value) {
+    this->set(value);
+    return true;
+  }
+
+  bool headlessTransform(std::function<T(T)> &&function) {
+    auto value = *this->memory_;
+    *this->memory_ = function(value);
+    return true;
   }
 
   ~Buffer() noexcept {
@@ -343,33 +525,57 @@ class Buffer<T, 0>: public BufferBase<T> {
 class BufferFactory {
 
  public:
-  template<class T, size_t_ dimension>
-  static Buffer<T, dimension> createBuffer(std::array<size_t_, dimension> &&sizes) {
-    return Buffer<T, dimension>(std::forward<std::array<size_t_, dimension>>(sizes));
+  /**
+   *
+   */
+  template<class T, SizeType dimension>
+  static Buffer<T, dimension> createBufferDynamic(std::array<SizeType, dimension> &&sizes) {
+    return Buffer<T, dimension>(std::forward<std::array<SizeType, dimension>>(sizes));
   }
 
-  template<class T, size_t_ dimension>
-  static Buffer<T, dimension> createBuffer(const size_t_ *sizeList) {
-    return Buffer<T, dimension>(std::array<size_t_, dimension>({sizeList}));
+  /**
+   * Use a dynamic list of sizes to create the buffer.
+   * @tparam T The type.
+   * @tparam dimension The dimension the buffer.
+   * @arg sizeList The list of sizes.
+   *
+   */
+  template<class T, SizeType dimension>
+  static Buffer<T, dimension> createBufferDynamic(const SizeType *sizeList) {
+    return Buffer<T, dimension>(std::array<SizeType, dimension>({sizeList}));
   }
 
+  /**
+   * @tparam T The type.
+   * @tparam sizes The size list of the buffer.
+   * @return The buffer created.
+   */
   template<class T, int ...sizes>
   static Buffer<T, sizeof...(sizes)> createBuffer() {
     constexpr auto length = sizeof...(sizes);
-    return Buffer<T, length>(std::array<size_t_, length>({sizes...}));
+    return Buffer<T, length>(std::array<SizeType, length>({sizes...}));
   };
 
+  /**
+   * Use a static list of sizes to create the buffer.
+   */
   template<class T, int ...sizes>
   static Buffer<T, sizeof...(sizes)> createBuffer(const typename MultiInitializerList<T,
                                                                                       sizeof...(sizes)>::type &multiList) {
     constexpr auto length = sizeof...(sizes);
-    return Buffer<T, length>(std::array<size_t_, length>({sizes...}))
+    return Buffer<T, length>(std::array<SizeType, length>({sizes...}))
         .fromInitializerList(multiList);
   };
 
-  template<class T, size_t_ dimension>
+  /**
+   * @tparam T
+   * @tparam dimension
+   * @arg sizes
+   * @arg multiList
+   */
+  template<class T, SizeType dimension>
   static Buffer<T, dimension> createBuffer(
-      std::array<size_t_, dimension> &&sizes,
+      std::array<SizeType, dimension> &&sizes,
       typename MultiInitializerList<T, dimension>::type multiList) {
 
   };

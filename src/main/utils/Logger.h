@@ -18,8 +18,18 @@ logger->delayedLog(message, LogLevel::VALUES::DEBUG);
 #define AXUREZ_LOGGER_DEBUG(logger, message)
 #endif
 
-
+/**
+ * @struct LogLevel
+ *
+ * The structure for logging levels.
+ *
+ *
+ */
 struct LogLevel {
+  /**
+   * @enum_class
+   * The enumeration class for the values of the logging level.
+   */
   enum class VALUES {
     FATAL,
     CRITICAL,
@@ -32,6 +42,12 @@ struct LogLevel {
   VALUES value;
   typedef char* CharBuffer;
 
+  /**
+   * @class CharBufferEntity
+   *
+   * The class for an entity of the class buffer.
+   * For creation of the character buffers holding the name of the levels for output.
+   */
   class CharBufferEntity {
    protected:
     CharBuffer charBuffer;
@@ -62,6 +78,9 @@ struct LogLevel {
   static int MAX_LENGTH;
   static CharBuffer charBuffer;
 
+  /**
+   *
+   */
   static std::string toString(VALUES value) {
     switch (value) {
       case VALUES::FATAL:
@@ -79,6 +98,9 @@ struct LogLevel {
     }
   }
 
+  /**
+   *
+   */
   CharBuffer toChars(VALUES value) {
     return LogLevel::charBuffer
         + int(value) * MAX_LENGTH;
@@ -91,6 +113,8 @@ struct LogLevel {
 
 /**
  * TODO: Add time.
+ * @class Logger
+ *
  */
 class Logger {
   typedef char* CharBuffer;
@@ -171,6 +195,9 @@ class Logger {
     return buildLogMessageStream(sstream, std::forward<Types>(messages)...);
   }
 
+  /**
+   * @method buildLogMessageStream
+   */
   template<class T>
   std::stringstream &buildLogMessageStream(std::stringstream &sstream, T&message) {
     sstream << message;

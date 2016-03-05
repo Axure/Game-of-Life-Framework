@@ -19,7 +19,7 @@ add_executable(ScreenTest
 target_include_directories(ScreenTest PUBLIC
         ../../src/main/)
 target_link_libraries(ScreenTest
-        Screen
+        Curses
         Logger
         Timer)
 
@@ -35,7 +35,8 @@ add_executable(GameTest
 target_include_directories(GameTest PUBLIC
         ../../src/main/)
 target_link_libraries(GameTest
-        Screen
+        Game
+        Curses
         Timer
         Logger
         )

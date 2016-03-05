@@ -36,6 +36,8 @@ class Timer: NonCopyable {
 class Delayer {
  public:
   Delayer(double interval = 1);
+//  Delayer(Delayer &delayer);
+//  Delayer(Delayer &&delayer);
   void delay();
   ~Delayer();
  private:

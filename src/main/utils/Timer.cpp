@@ -20,6 +20,9 @@ void Timer::setToFire(std::function<void()> function) {
   this->thing_ = function;
 }
 
+/**
+ *
+ */
 void Timer::run() {
   auto logger = LoggerFactory::getSingletonLogger();
   logger->log("aha");
@@ -52,3 +55,11 @@ void Delayer::delay() {
 Delayer::~Delayer() {
 
 }
+
+//Delayer::Delayer(Delayer &delayer) {
+//
+//}
+//
+//Delayer::Delayer(Delayer &&delayer) {
+//
+//}

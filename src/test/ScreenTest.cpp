@@ -6,13 +6,13 @@
 #include <thread>
 #include <future>
 #include <utils/LoggerFactory.h>
-#include "Screen.h"
+#include "Engine/Curses.h"
 #include "utils/Timer.h"
 using namespace std::literals;
 
 int main() {
 //  print();
-  auto screen = Screen();
+  auto screen = Curses();
   int x, y;
   Delayer delayer(1.1);
   auto logger = LoggerFactory::getSingletonLogger();
@@ -26,7 +26,7 @@ int main() {
     screen.run();
   });
   std::thread settingThread([&] {
-    screen.fill('1');
+    screen.fillWithChar('1');
   });
 
   std::cout << "After!" << std::endl;

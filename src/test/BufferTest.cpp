@@ -2,7 +2,7 @@
 // Created by 郑虎 on 2016-02-09.
 //
 #include <iostream>
-#include "Buffer.h"
+#include "DataStructure/Buffer.tcc"
 #include "utils/LoggerFactory.h"
 
 int main() {
