@@ -47,6 +47,7 @@ class Curses {
   void stop();
   void refresh();
   void detach();
+  void fill(char ch);
 
   /**
    *
@@ -93,7 +94,7 @@ class Curses {
   std::size_t oldWidth = 0, oldHeight = 0;
   std::function<bool()> ifContinue_;
   bool on;
-
+  bool changed;
   std::shared_ptr<std::thread> pRenderingThread_;
  public:
 };

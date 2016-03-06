@@ -52,7 +52,7 @@ void Curses::fitSize() {
  *
  */
 void Curses::attach(std::function<bool()> ifContinue) {
-//  initscr();
+  ::initscr();
   this->on = true;
   this->ifContinue_ = ifContinue;
   this->fitSize();
@@ -65,13 +65,14 @@ void Curses::attach(std::function<bool()> ifContinue) {
  */
 void Curses::refresh() {
 //  for
-  clear();
+  ::clear();
   for (int i = 0; i < width; ++i) {
     for (int j = 0; j < height; ++j) {
       printw("%c", (*buffer).get(i, j));
     }
   }
-  refresh();
+  ::refresh();
+  this->changed = false;
 }
 
 /**
@@ -79,7 +80,7 @@ void Curses::refresh() {
  */
 void Curses::detach() {
   stop();
-//  endwin();
+  ::endwin();
 }
 
 /**
@@ -96,7 +97,7 @@ void Curses::stop() {
 template<unsigned int length, class ...Types>
 void Curses::printAt(size_t x, size_t y, const char (&format)[length], Types...content) {
   move(x, y);
-  printw(format, content...);
+  ::printw(format, content...);
 }
 
 /**
@@ -107,9 +108,9 @@ std::tuple<int, int> Curses::getTerminalSize() {
   int x, y;
   getmaxyx(stdscr, y, x);
   if (y < 0 || x < 0) {
-    initscr();
+    ::initscr();
     getmaxyx(stdscr, y, x);
-    endwin();
+    ::endwin();
   }
 
   return std::make_tuple(std::move(x), std::move(y));
@@ -120,8 +121,8 @@ std::tuple<int, int> Curses::getTerminalSize() {
  */
 template<unsigned int length, class ...Types>
 void Curses::print(const char (&format)[length], Types &&...args) {
-  printw(format, std::forward<Types>(args)...);
-  refresh();
+  ::printw(format, std::forward<Types>(args)...);
+  ::refresh();
 };
 
 /**
@@ -158,22 +159,23 @@ void Curses::run() {
     logger->delayedLog("Resizing thread started!");
     buffer->fill('#'); // TODO: only for testing.
     do {
-      if (this->autoResize_) {
-        getmaxyx(stdscr, t_height, t_width_);
-        if (t_height != height || t_width_ != width) {
-          height = t_height;
-          width = t_width_;
-          logger->delayedMultiLog(LogLevel::VALUES::DEBUG,
-                                  "Terminal resized! [",
-                                  t_width_,
-                                  ", ",
-                                  t_height, "]");
-          buffer->rescale({width, height});
-          resize_term(t_height, t_width_);
-        }
-        buffer->fill('#'); // TODO: only for testing.
-      }
-      refresh();
+      logger->delayedLog(this->autoResize_);
+//      if (this->autoResize_) {
+//        getmaxyx(stdscr, t_height, t_width_);
+//        if (t_height != height || t_width_ != width) {
+//          height = t_height;
+//          width = t_width_;
+//          logger->delayedMultiLog(LogLevel::VALUES::DEBUG,
+//                                  "Terminal resized! [",
+//                                  t_width_,
+//                                  ", ",
+//                                  t_height, "]");
+//          buffer->rescale({width, height});
+//          resize_term(t_height, t_width_);
+//        }
+//        buffer->fill('#'); // TODO: only for testing.
+//        this->refresh();
+//      }
       /**
        * For immediate response to the resizing,
        * we use `on` instead of evaluating `ifContinue_()`,
@@ -181,38 +183,38 @@ void Curses::run() {
        */
     } while (on);
   });
-  fitSize();
+  this->fitSize();
   buffer->fill('#');
-//  std::thread keyThread([&] {
-//    do {
-//      c = wgetch(stdscr);
-//      logger->delayedLog(c);
-//      detach();
-////      if (c == KEY_UP) {
-////        continue;
-////      }
-////      if (c == KEY_DOWN) {
-////        detach();
-////        break;
-////      }
-//      /**
-//       * For the same reason we use `on` here.
-//       * But this loop would only proceed once a key is pressed.
-//       */
-//    } while (on);
-//
-//  });
+  std::thread keyThread([&] {
+    do {
+      c = wgetch(stdscr);
+      logger->delayedLog(c);
+      detach();
+//      if (c == KEY_UP) {
+//        continue;
+//      }
+//      if (c == KEY_DOWN) {
+//        detach();
+//        break;
+//      }
+      /**
+       * For the same reason we use `on` here.
+       * But this loop would only proceed once a key is pressed.
+       */
+    } while (on);
+
+  });
 
   pRenderingThread_ = std::make_shared<std::thread>([&] {
     do {
-      if (this->on) {
-        refresh();
+      if (this->changed && this->on) {
+        this->refresh();
       }
 //      std::cout << 1 << std::endl;
     } while (this->ifContinue_());
   });
 
-//  keyThread.join();
+  keyThread.join();
   pRenderingThread_->join();
   resizeThread.join();
 
@@ -227,4 +229,9 @@ void Curses::run() {
  */
 bool Curses::putCharAt(size_t x, size_t y, char c) noexcept {
   return buffer->headlessSet(c, x, y);
+}
+
+void Curses::fill(char ch) {
+  this->buffer->fill(ch);
+  this->changed = true;
 }

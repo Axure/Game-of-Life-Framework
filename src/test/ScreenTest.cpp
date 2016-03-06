@@ -25,14 +25,14 @@ int main() {
   std::thread renderingThread([&] {
     screen.run();
   });
-//  std::thread settingThread([&] {
-//    screen.fillWithChar('1');
-//  });
+  std::thread settingThread([&] {
+    screen.fillWithChar('1');
+  });
 
   std::cout << "After!" << std::endl;
   logger->delayedLog("After!");
   renderingThread.join();
-//  settingThread.join();
+  settingThread.join();
   logger->flush();
   return 0;
 }
