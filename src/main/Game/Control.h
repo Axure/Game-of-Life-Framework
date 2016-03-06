@@ -5,11 +5,11 @@
 #ifndef GAMEOFLIF_CONTROL_H
 #define GAMEOFLIF_CONTROL_H
 
-#include "../Engine/Curses.h"
+//#include "../Engine/Curses.h"
 
 class Control {
  public:
-  virtual void render(Curses& screen);
+//  virtual void render(Curses& screen);
   struct Compare {
     bool operator()(const Control &lhs, const Control &rhs) const {
       return lhs.zIndex < rhs.zIndex;

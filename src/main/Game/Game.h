@@ -8,12 +8,15 @@
 #include <vector>
 #include <unordered_map>
 #include <set>
-#include "../Engine/Curses.h"
+#include <thread>
+#include "../Engine/CursesPp.h"
+#include "../DataStructure/Buffer.tcc"
 #include "Dialog.h"
 #include "../utils/Timer.h"
+#include "../Macros.h"
 
 enum class STATE {
-  ALIVE, DEAD
+  DEAD, ALIVE
 };
 
 /**
@@ -28,29 +31,47 @@ enum class STATE {
  * TODO: logging can be turned on in screen mode.
  */
 class Game {
- public:
+
+ AX_GROUP_ANNOTATION("Constructor", public)
+  /**
+   *
+   */
   Game(std::size_t width = Game::defaultWidth,
        std::size_t height = Game::defaultHeight,
        double frequency = Game::defaultFrequency,
        Buffer<STATE, 2> initialBoard = defaultBoard_);
 
+ AX_GROUP_ANNOTATION("Basic operations", public)
+  /**
+   * Run the game.
+   */
   void run();
+  /**
+   * Stop the game.
+   */
   void stop();
 
- /**
-  * Dependency injection.
-  */
- public:
-  void setCurses(std::shared_ptr<Curses> pCurses) {
+ AX_GROUP_ANNOTATION("Dependency injection", public)
+  /**
+   *
+   */
+  void setCurses(std::shared_ptr<CursesPp> pCurses) {
     this->pCurses_ = pCurses;
     /**
      *
      */
-    pCurses_->attach([&] {
-      pDelayer_->delay();
-      return true;
-    });
+//    pCurses_->attach([&] {
+//      pDelayer_->delay();
+//      return true;
+//    });
   }
+
+ AX_GROUP_ANNOTATION("Threads", protected)
+  /**
+    * The working thread.
+    */
+  std::shared_ptr<std::thread> pWorkingThread_;
+
 
  protected:
   /**
@@ -72,7 +93,7 @@ class Game {
    *
    */
   static Buffer<STATE, 2> defaultBoard_;
-  static constexpr std::size_t defaultWidth = 10, defaultHeight = 10;
+  static constexpr std::size_t defaultWidth = 5, defaultHeight = 5;
   static constexpr double defaultFrequency = 1;
   /**
    *
@@ -86,11 +107,8 @@ class Game {
   /**
    * The curses interface.
    */
-  std::shared_ptr<Curses> pCurses_;
-  /**
-   * Threads.
-   */
-  std::shared_ptr<std::thread> pWorkingThread_;
+  std::shared_ptr<CursesPp> pCurses_;
+
   /**
    * Dependency injection.
    */

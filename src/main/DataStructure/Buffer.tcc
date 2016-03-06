@@ -295,7 +295,7 @@ class Buffer: public BufferBase<T> {
     static_assert(sizeof...(RestInt) == dimension - 1,
                   "The number of indices provided is incorrect!");
     static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
-    if (this->sizes_[0] > firstIndex || firstIndex < 0) {
+    if (0 > firstIndex || this->sizes_[0] <= firstIndex) {
       return 0;
     } else {
       return this->operator[](static_cast<SizeType >(firstIndex))
@@ -310,7 +310,7 @@ class Buffer: public BufferBase<T> {
     static_assert(sizeof...(RestInt) == dimension - 1,
                   "The number of indices provided is incorrect!");
     static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
-    if (this->sizes_[0] > firstIndex || firstIndex < 0) {
+    if (0 > firstIndex || this->sizes_[0] <= firstIndex) {
       return 0;
     } else {
       return this->operator[](static_cast<SizeType >(firstIndex))
@@ -327,7 +327,7 @@ class Buffer: public BufferBase<T> {
     static_assert(sizeof...(RestInt) == dimension - 1,
                   "The number of indices provided is incorrect!");
     static_assert(std::is_convertible<FirstInt, SizeType>::value, "?");
-    if (this->sizes_[0] > firstIndex || firstIndex < 0) {
+    if (0 > firstIndex || this->sizes_[0] <= firstIndex) {
       return false;
     } else {
       return this->operator[](static_cast<SizeType >(firstIndex))

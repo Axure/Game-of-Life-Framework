@@ -19,7 +19,7 @@ class Dialog {
   Dialog();
   virtual ~Dialog();
 
-  virtual void render(Curses& screen); // We directly use the screen's buffer.
+//  virtual void render(Curses& screen); // We directly use the screen's buffer.
 
  protected:
   int zIndex;

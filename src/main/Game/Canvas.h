@@ -10,7 +10,7 @@
 class Canvas: Control {
 
  public:
-  virtual void render(Curses& screen);
+//  virtual void render(Curses& screen);
  protected:
 
 

@@ -5,15 +5,7 @@
 #ifndef GAMEOFLIF_SCREEN_H
 #define GAMEOFLIF_SCREEN_H
 
-#define COMPUTED(name, function) \
 
-#define AX_BIND_VARIABLE(var, bound) \
-  decltype(var) get##bound() const noexcept {\
-    return var;\
-  }\
-  void set##bound(decltype(var)& value) {\
-    this->var = value;\
-  }\
 
 #include <type_traits>
 #include <memory>
@@ -21,6 +13,7 @@
 #include <functional>
 #include <thread>
 
+#include "../Macros.h"
 #include "../DataStructure/Buffer.tcc"
 
 /**

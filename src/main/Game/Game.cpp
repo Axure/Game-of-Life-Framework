@@ -10,8 +10,8 @@
 Buffer<STATE, 2> Game::defaultBoard_ =
     BufferFactory::createBuffer<STATE, Game::defaultWidth, Game::defaultHeight>(
         {
-          {STATE::ALIVE, STATE::ALIVE, STATE::ALIVE, STATE::ALIVE, STATE::DEAD},
-          {STATE::DEAD, STATE::DEAD, STATE::DEAD, STATE::DEAD, STATE::DEAD, STATE::DEAD}
+            {STATE::ALIVE, STATE::ALIVE, STATE::ALIVE, STATE::ALIVE, STATE::DEAD},
+            {STATE::DEAD, STATE::DEAD, STATE::DEAD, STATE::DEAD, STATE::DEAD, STATE::DEAD}
         });
 
 /**
@@ -27,7 +27,7 @@ void Game::run() {
   /**
    * Get the screen.
    */
-  this->pCurses_->fitSize();
+//  this->pCurses_->fitSize();
 
   /**
    * Register the key handlers.
@@ -47,9 +47,12 @@ void Game::run() {
    * TODO: complex event handling like RxJS.
    */
   on_ = true;
+  pCurses_-> attach();
 
-  pWorkingThread_ = std::make_shared<std::thread>([&]() {
-    pCurses_->run();
+//  pWorkingThread_ = std::make_shared<std::thread>([&]() {
+//    pCurses_->run();
+    this->refreshNeighborCount_();
+
     do {
       /**
        * Evolve?
@@ -57,15 +60,17 @@ void Game::run() {
       render_();
       evolve_();
       pDelayer_->delay();
+//      std::cout << "ha" << std::endl;
 
     } while (on_);
-  });
 
+//  });
+  pCurses_->detach();
 //  std::thread wow([&] () {
 //    pCurses_->run();
 //  });
 
-  pWorkingThread_->join();
+//  pWorkingThread_->join();
 //  wow.join();
 }
 
@@ -81,8 +86,7 @@ Game::Game(size_t width, size_t height, double frequency, Buffer<STATE, 2> initi
     width_(width), height_(height), frequency_(frequency),
     board_(initialBoard), neighborCount_({width, height}),
     pLogger_(LoggerFactory::getSingletonLogger()),
-    pDelayer_(new Delayer(frequency_))
-{
+    pDelayer_(new Delayer(frequency_)) {
   refreshNeighborCount_();
 }
 
@@ -129,7 +133,28 @@ void Game::refreshNeighborCount_() {
       if (board_.get(i, j) == STATE::ALIVE) {
         neighborCount_.headlessTransform([](int x) {
           return x + 1;
-        }, i, j);
+        }, i, j + 1);
+        neighborCount_.headlessTransform([](int x) {
+          return x + 1;
+        }, i + 1, j);
+        neighborCount_.headlessTransform([](int x) {
+          return x + 1;
+        }, i - 1, j);
+        neighborCount_.headlessTransform([](int x) {
+          return x + 1;
+        }, i, j - 1);
+        neighborCount_.headlessTransform([](int x) {
+          return x + 1;
+        }, i + 1, j - 1);
+        neighborCount_.headlessTransform([](int x) {
+          return x + 1;
+        }, i + 1, j + 1);
+        neighborCount_.headlessTransform([](int x) {
+          return x + 1;
+        }, i - 1, j - 1);
+        neighborCount_.headlessTransform([](int x) {
+          return x + 1;
+        }, i - 1, j + 1);
       }
     }
   }
@@ -179,4 +204,5 @@ void Game::render_() {
      * Send finish writing signal? Maybe screen should expose such an interface.
      */
   }
+  pCurses_->refresh();
 }
