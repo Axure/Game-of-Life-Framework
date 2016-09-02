@@ -3,12 +3,7 @@
 //
 
 #include "Curses.h"
-#ifdef WIN32
-#include <windows.h>
-#else
-#include <sys/ioctl.h>
 #include <ncurses.h>
-#endif
 #include <iostream>
 #include <thread>
 #include "../utils/LoggerFactory.h"
